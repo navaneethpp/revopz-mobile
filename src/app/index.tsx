@@ -1,17 +1,11 @@
-import { Text, View, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 
-export default function Index() {
+export default function Home() {
   return (
-    <View style={styles.container}>
-      <Text>Edit src/app/index.tsx to edit this screen.</Text>
+    <View className="flex-1 items-center justify-center bg-black">
+      <Text className="text-white text-3xl font-bold">
+        REVOPZ Mobile 🚀
+      </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
