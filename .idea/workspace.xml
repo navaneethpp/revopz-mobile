@@ -6,10 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="a61756c1-2fa7-47cf-a531-6054f7300c1e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/firebase/config.ts " beforeDir="false" afterPath="$PROJECT_DIR$/src/firebase/config.ts " afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/theme/colors.ts " beforeDir="false" afterPath="$PROJECT_DIR$/src/theme/colors.ts " afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/theme/spacing.ts " beforeDir="false" afterPath="$PROJECT_DIR$/src/theme/spacing.ts " afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/theme/typography.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/theme/typography.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,9 +54,11 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/components/common" />
+      <recent name="$PROJECT_DIR$/src/components/cards" />
+      <recent name="$PROJECT_DIR$/src/components/inputs" />
+      <recent name="$PROJECT_DIR$/src/components/buttons" />
       <recent name="$PROJECT_DIR$/src/assets" />
-      <recent name="$PROJECT_DIR$/src" />
-      <recent name="$PROJECT_DIR$/src/app" />
     </key>
   </component>
   <component name="TaskManager">
@@ -69,5 +70,16 @@
       <updated>1779384375268</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

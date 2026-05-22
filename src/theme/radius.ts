@@ -1,0 +1,6 @@
+export const RADIUS = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  full: 9999,
+};
