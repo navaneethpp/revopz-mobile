@@ -1,5 +1,5 @@
-import { View, Text } from "react-native";
+import SplashScreen from "@/screens/splashScreen/SplashScreen";
 
 export default function Home() {
-  return <Text>Hi</Text>;
+  return <SplashScreen />;
 }
