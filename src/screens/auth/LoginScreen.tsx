@@ -4,15 +4,53 @@ import PrimaryButton from "@/components/ui/PrimaryInput";
 import ScreenContainer from "@/components/ui/ScreenContainer";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import { useState } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { Alert, Text, TouchableOpacity } from "react-native";
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('');
     const [biometricEnabled, setBiometricEnabled] = useState(false);
 
+    const [errors, setErrors] = useState({
+        email: "",
+        password: "",
+    });
+
+    const validateForm = () => {
+        let valid = true;
+
+        const newErrors = {
+            email: "",
+            password: "",
+        };
+
+        if (!email.trim()) {
+            newErrors.email = "Email is required";
+            valid = false;
+        } else if (
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+        ) {
+            newErrors.email = "Email is required";
+            valid = false;
+        }
+
+        if (!password.trim()) {
+            newErrors.password = "Password is required";
+            valid = false;
+        } else if (password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters"
+            valid = false
+        }
+
+        setErrors(newErrors);
+
+        return valid;
+    };
+
+
     const handleLogin = () => {
-        console.log('Login Pressed');
+        if (!validateForm()) return;
+        Alert.alert("Success", "From validated successfully");
     };
 
     return (
@@ -26,6 +64,7 @@ export default function LoginScreen() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                error={errors.email}
             />
 
             <CustomInput
@@ -34,6 +73,7 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
+                error={errors.password}
             />
 
             <TouchableOpacity
