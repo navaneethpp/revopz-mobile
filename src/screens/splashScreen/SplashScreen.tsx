@@ -1,38 +1,90 @@
+/**
+ * src/screens/splashScreen/SplashScreen.tsx
+ *
+ * Shows the REVOPZ logo with a fade-out animation, then checks SecureStore
+ * for an existing session. Logged-in users go straight to /home; everyone
+ * else goes to /auth/login.
+ */
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
-import { Animated, Dimensions, Image, View } from "react-native";
+import { Animated, Dimensions, Image, StyleSheet, View } from "react-native";
+
+import { isLoggedIn } from "@/utils/storage";
 
 const { width } = Dimensions.get("window");
+const LOGO_SIZE = width * 0.32;
+
+// Time (ms) the logo is fully visible before it starts fading
+const HOLD_DURATION = 800;
+// Duration of the fade-out animation
+const FADE_DURATION = 500;
 
 export default function SplashScreen() {
-    const fadeAnim = useRef(new Animated.Value(1)).current;
+    const opacity = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 600,
-                useNativeDriver: true,
-            }).start(() => {
-                router.replace('/auth/login');
-            });
-        }, 600);
+        let cancelled = false;
 
-        return () => clearTimeout(timer);
-    }, []);
+        const run = async () => {
+            // 1. Wait for the logo hold period
+            await new Promise<void>((resolve) =>
+                setTimeout(resolve, HOLD_DURATION),
+            );
+
+            if (cancelled) return;
+
+            // 2. Check session while the logo is still visible (parallel work)
+            const [loggedIn] = await Promise.all([
+                isLoggedIn(),
+                // Kick off the fade at the same time
+                new Promise<void>((resolve) =>
+                    Animated.timing(opacity, {
+                        toValue: 0,
+                        duration: FADE_DURATION,
+                        useNativeDriver: true,
+                    }).start(() => resolve()),
+                ),
+            ]);
+
+            if (cancelled) return;
+
+            // 3. Navigate — replace so the splash never appears in back-stack
+            if (loggedIn) {
+                router.replace("/home");
+            } else {
+                router.replace("/auth/login");
+            }
+        };
+
+        run();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [opacity]);
 
     return (
-        <View className="flex-1 items-center justify-center bg-white" style={{ flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" }}>
-            <Animated.View style={{ opacity: fadeAnim }}>
+        <View style={styles.container}>
+            <Animated.View style={{ opacity }}>
                 <Image
                     source={require("../../assets/images/revopz-logo.png")}
                     resizeMode="contain"
-                    style={{
-                        width: width * 0.30,
-                        height: width * 0.30,
-                    }}
+                    style={styles.logo}
                 />
             </Animated.View>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#ffffff",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    logo: {
+        width: LOGO_SIZE,
+        height: LOGO_SIZE,
+    },
+});
