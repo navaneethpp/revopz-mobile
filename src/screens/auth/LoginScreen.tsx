@@ -3,6 +3,8 @@ import LogoHeader from "@/components/ui/LogoHeader";
 import PrimaryButton from "@/components/ui/PrimaryInput";
 import ScreenContainer from "@/components/ui/ScreenContainer";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
+import { loginUser } from '@/services/authService';
+
 import { useState } from "react";
 import { Alert, Text, TouchableOpacity } from "react-native";
 
@@ -48,10 +50,24 @@ export default function LoginScreen() {
     };
 
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (!validateForm()) return;
-        Alert.alert("Success", "From validated successfully");
+
+        try {
+            const user = await loginUser(email, password);
+
+            console.log('Logged in user:', user);
+
+            Alert.alert("Login Successful", "Welcome to REVOPZ");
+        } catch (error: any) {
+            Alert.alert(
+                "Login Failed",
+                error.message
+            );
+        }
     };
+
+
 
     return (
         <ScreenContainer>
