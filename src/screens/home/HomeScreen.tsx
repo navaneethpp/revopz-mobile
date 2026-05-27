@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
+import HeaderBar from "@/components/ui/HeaderBar";
 import RecentActivityCard from "@/components/ui/RecentActivityCard";
 import ActionCard from "@/components/ui/ActionCard";
 import { getSession } from "@/utils/storage";
@@ -96,17 +96,7 @@ export default function HomeScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
 
             {/* ── Top Navigation Bar ── */}
-            <View style={styles.navbar}>
-                <Text style={styles.brand}>Revopz</Text>
-
-                <TouchableOpacity
-                    onPress={() => router.push("/profile")}
-                    style={styles.avatar}
-                    activeOpacity={0.8}
-                >
-                    <Feather name="user" size={20} color="#1565C0" />
-                </TouchableOpacity>
-            </View>
+            <HeaderBar />
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -146,29 +136,6 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: "#F8FAFC",
-    },
-    navbar: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        backgroundColor: "#F8FAFC",
-    },
-    brand: {
-        fontSize: 22,
-        fontWeight: "800",
-        color: "#D97706",
-        letterSpacing: -0.5,
-    },
-    avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: "#DBEAFE",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
     },
     scrollContent: {
         paddingHorizontal: 16,

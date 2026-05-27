@@ -2,18 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, View, TouchableOpacity, StatusBar, Switch, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import * as SecureStore from "expo-secure-store";
+import HeaderBar from "@/components/ui/HeaderBar";
 import { logoutUser } from "@/services/authService";
 import { getSession } from "@/utils/storage";
 import type { SessionData } from "@/types/auth";
-
-const getInitials = (name?: string) => {
-    if (!name) return "";
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-};
 
 export default function ProfileScreen() {
     const [session, setSession] = useState<SessionData | null>(null);
@@ -68,24 +61,10 @@ export default function ProfileScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
 
             {/* Header / Top Navigation Bar */}
-            <View style={styles.navbar}>
-                {session?.avatarUrl ? (
-                    <Image
-                        source={{ uri: session.avatarUrl }}
-                        style={styles.navAvatar}
-                    />
-                ) : (
-                    <View style={[styles.navAvatar, styles.avatarInitialsContainer]}>
-                        <Text style={styles.avatarInitialsText}>
-                            {getInitials(session?.name)}
-                        </Text>
-                    </View>
-                )}
-                <Text style={styles.brand}>Revopz</Text>
-            </View>
+            <HeaderBar />
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -183,37 +162,6 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: "#F8FAFC",
-    },
-    navbar: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        backgroundColor: "#FFFFFF",
-        borderBottomWidth: 1,
-        borderBottomColor: "#E2E8F0",
-    },
-    navAvatar: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-    },
-    avatarInitialsContainer: {
-        backgroundColor: "#DBEAFE",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    avatarInitialsText: {
-        color: "#1E40AF",
-        fontSize: 14,
-        fontWeight: "700",
-    },
-    brand: {
-        fontSize: 20,
-        fontWeight: "800",
-        color: "#1D4ED8",
-        marginLeft: 12,
-        letterSpacing: -0.5,
     },
     scrollContent: {
         paddingTop: 20,
