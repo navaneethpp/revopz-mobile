@@ -62,8 +62,6 @@ function timeAgo(date: Date): string {
 export async function fetchRecentActivity(
     limitCount = 5,
 ): Promise<ActivityItem[]> {
-    console.log("Fetching recent activity...");
-    console.log("Current UID:", auth.currentUser?.uid);
 
     try {
         const q = query(
@@ -73,8 +71,6 @@ export async function fetchRecentActivity(
         );
 
         const snapshot = await getDocs(q);
-        console.log("Snapshot size:", snapshot.size);
-        console.log("Documents:", snapshot.docs.map(doc => doc.data()));
 
         if (snapshot.empty) {
             return [];
