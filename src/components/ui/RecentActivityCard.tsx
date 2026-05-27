@@ -1,18 +1,14 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ActivityItem from "./ActivityItem";
 
 export default function RecentActivityCard() {
     return (
-        <View className="mx-4 mt-6 bg-white rounded-2xl p-5 border border-gray-200">
-            <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-2xl font-semibold text-black">
-                    Recent Activity
-                </Text>
-
+        <View style={styles.card}>
+            {/* Header row */}
+            <View style={styles.header}>
+                <Text style={styles.heading}>Recent Activity</Text>
                 <TouchableOpacity>
-                    <Text className="text-blue-600 font-medium">
-                        View All
-                    </Text>
+                    <Text style={styles.viewAll}>View All</Text>
                 </TouchableOpacity>
             </View>
 
@@ -20,16 +16,41 @@ export default function RecentActivityCard() {
                 title="Units Added: Titanium Drill Bits"
                 subtitle="12 units added to Warehouse A • 5 mins ago"
             />
-
             <ActivityItem
                 title="Units Added: Industrial Grade Servo"
                 subtitle="24 units added to Warehouse B • 15 mins ago"
             />
-
             <ActivityItem
                 title="Units Added: Pneumatic Actuator"
                 subtitle="8 units added to Warehouse A • 45 mins ago"
+                isLast
             />
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    card: {
+        backgroundColor: "#ffffff",
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        padding: 20,
+    },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 18,
+    },
+    heading: {
+        fontSize: 17,
+        fontWeight: "700",
+        color: "#111827",
+    },
+    viewAll: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#1565C0",
+    },
+});

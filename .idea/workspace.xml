@@ -7,9 +7,12 @@
     <list default="true" id="a61756c1-2fa7-47cf-a531-6054f7300c1e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/CustomInput.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/CustomInput.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/ActionCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/ActionCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/ActivityItem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/ActivityItem.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/BottomNavigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/BottomNavigation.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/RecentActivityCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/RecentActivityCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/home/HomeScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/home/HomeScreen.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +46,7 @@
     &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feat/loginScreen&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;development&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;/home/navaneeth/Documents/Revopz/Mobile App/revopz-mobile/assets/images&quot;,
     &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
