@@ -1,4 +1,5 @@
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { router } from "expo-router";
 import ActivityItem from "./ActivityItem";
 import type { ActivityItem as ActivityItemData } from "@/services/activityService";
 
@@ -14,7 +15,11 @@ export default function RecentActivityCard({ entries = [], loading = false }: Pr
             {/* Header row */}
             <View style={styles.header}>
                 <Text style={styles.heading}>Recent Activity</Text>
-                <TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => router.push("/activity")}
+                    activeOpacity={0.7}
+                    accessibilityLabel="View all activity logs"
+                >
                     <Text style={styles.viewAll}>View All</Text>
                 </TouchableOpacity>
             </View>
