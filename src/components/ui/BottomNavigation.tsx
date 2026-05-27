@@ -8,7 +8,7 @@ export default function BottomNavigation() {
 
     return (
         <View style={styles.container}>
-            {/* Dashboard tab — active blue pill */}
+            {/* Dashboard tab */}
             <TouchableOpacity
                 onPress={() => router.push("/home")}
                 activeOpacity={0.8}
@@ -36,17 +36,20 @@ export default function BottomNavigation() {
             <TouchableOpacity
                 onPress={() => router.push("/profile")}
                 activeOpacity={0.8}
-                style={styles.settingsTab}
+                style={[
+                    styles.tab,
+                    !isHome ? styles.activeTab : styles.inactiveTab,
+                ]}
             >
                 <Feather
                     name="settings"
                     size={20}
-                    color={!isHome ? "#1565C0" : "#6B7280"}
+                    color={!isHome ? "#fff" : "#6B7280"}
                 />
                 <Text
                     style={[
-                        styles.settingsLabel,
-                        { color: !isHome ? "#1565C0" : "#6B7280", marginTop: 4 },
+                        styles.tabLabel,
+                        { color: !isHome ? "#fff" : "#6B7280", marginLeft: 8 },
                     ]}
                 >
                     Settings
@@ -68,29 +71,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     tab: {
-        flexDirection: "row",
+        flexDirection: "column",
         alignItems: "center",
         paddingVertical: 10,
-        borderRadius: 100,
+        borderRadius: 16,
     },
     activeTab: {
-        backgroundColor: "#1565C0",
+        backgroundColor: "#D97706", // Amber
         paddingHorizontal: 22,
     },
     inactiveTab: {
-        paddingHorizontal: 8,
+        paddingHorizontal: 16,
     },
     tabLabel: {
         fontWeight: "600",
         fontSize: 14,
-    },
-    settingsTab: {
-        alignItems: "center",
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-    },
-    settingsLabel: {
-        fontSize: 12,
-        fontWeight: "500",
     },
 });
