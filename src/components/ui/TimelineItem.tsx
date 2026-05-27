@@ -10,6 +10,10 @@ export interface TimelineItemProps {
     status: string;
     createdAt: Date;
     createdByName?: string;
+    createdByRole?: string;
+    manufacturedDate?: string;
+    warrantyMonths?: number;
+    warrantyStatus?: string;
     isFirst?: boolean;
     isLast?: boolean;
 }
@@ -22,13 +26,19 @@ export default function TimelineItem({
     status,
     createdAt,
     createdByName,
+    createdByRole,
+    manufacturedDate,
+    warrantyMonths = 0,
+    warrantyStatus = "",
     isFirst = false,
     isLast = false,
 }: TimelineItemProps) {
     // Normalize status to one of the 4 activity types
     const norm = (status || "").toLowerCase();
     let statusType: "manufacturing" | "testing" | "quality" | "transfer" = "manufacturing";
-    if (norm.includes("fail") || norm.includes("test")) {
+    if (norm === "ready" || norm.includes("complete") || norm.includes("manufactur")) {
+        statusType = "manufacturing";
+    } else if (norm.includes("fail") || norm.includes("test")) {
         statusType = "testing";
     } else if (norm.includes("pass") || norm.includes("quality") || norm.includes("qa")) {
         statusType = "quality";
@@ -74,13 +84,13 @@ export default function TimelineItem({
         iconColor: "#10B981",
         circleBg: "#ECFDF5",
         badgeColor: "#059669",
-        metaLeftText: `SKU-${category.substring(0, 3).toUpperCase()}-${productNumber}`,
+        metaLeftText: `SKU: ${productNumber}`,
         metaLeftIsLink: true,
-        metaRightText: `Line A-${(numSeed % 4) + 1}`,
+        metaRightText: manufacturedDate ? `Mfg: ${manufacturedDate}` : `Line A-${(numSeed % 4) + 1}`,
         metaRightIsLink: false,
-        highlightLeft: batchNum,
+        highlightLeft: "",
         highlightLeftColor: "#059669",
-        highlightRight: "Automated Assembly Finished",
+        highlightRight: `Warranty: ${warrantyMonths} Mos (${warrantyStatus === "not_registered" ? "Not Registered" : "Registered"})`,
         highlightBg: "#ECFDF5",
         highlightBorderColor: "#A7F3D0",
         isTransfer: false,
@@ -97,11 +107,11 @@ export default function TimelineItem({
             badgeColor: "#DC2626",
             metaLeftText: "Efficiency Test",
             metaLeftIsLink: false,
-            metaRightText: `SKU-${category.substring(0, 3).toUpperCase()}-${productNumber}`,
+            metaRightText: `SKU: ${productNumber}`,
             metaRightIsLink: true,
-            highlightLeft: unitNum,
+            highlightLeft: "",
             highlightLeftColor: "#DC2626",
-            highlightRight: "Voltage Fluctuations Detected",
+            highlightRight: `Voltage Fluctuations Detected (Mfg: ${manufacturedDate || "N/A"})`,
             highlightBg: "#FEF2F2",
             highlightBorderColor: "#FCA5A5",
             isTransfer: false,
@@ -117,11 +127,11 @@ export default function TimelineItem({
             badgeColor: "#D97706",
             metaLeftText: "Final QA Stage",
             metaLeftIsLink: false,
-            metaRightText: `SKU-${category.substring(0, 3).toUpperCase()}-${productNumber}`,
+            metaRightText: `SKU: ${productNumber}`,
             metaRightIsLink: true,
-            highlightLeft: unitCount,
+            highlightLeft: "",
             highlightLeftColor: "#1E293B",
-            highlightRight: "Ready for Dispatch",
+            highlightRight: `Warranty: ${warrantyStatus === "not_registered" ? "Not Registered" : "Registered"} (Mfg: ${manufacturedDate || "N/A"})`,
             highlightBg: "#F1F5F9",
             highlightBorderColor: "#E2E8F0",
             isTransfer: false,
@@ -139,9 +149,9 @@ export default function TimelineItem({
             metaLeftIsLink: false,
             metaRightText: "",
             metaRightIsLink: false,
-            highlightLeft: unitCount,
+            highlightLeft: "",
             highlightLeftColor: "#2563EB",
-            highlightRight: "Internal Logistics Sync",
+            highlightRight: `Logistics Sync • Mfg: ${manufacturedDate || "N/A"}`,
             highlightBg: "#EFF6FF",
             highlightBorderColor: "#BFDBFE",
             isTransfer: true,
@@ -249,10 +259,14 @@ export default function TimelineItem({
                         },
                     ]}
                 >
-                    <Text style={[styles.highlightLeft, { color: config.highlightLeftColor }]}>
-                        {config.highlightLeft}
-                    </Text>
-                    <View style={[styles.highlightDivider, { backgroundColor: config.highlightBorderColor }]} />
+                    {config.highlightLeft ? (
+                        <>
+                            <Text style={[styles.highlightLeft, { color: config.highlightLeftColor }]}>
+                                {config.highlightLeft}
+                            </Text>
+                            <View style={[styles.highlightDivider, { backgroundColor: config.highlightBorderColor }]} />
+                        </>
+                    ) : null}
                     <Text style={styles.highlightRight} numberOfLines={1}>
                         {config.highlightRight}
                     </Text>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -20,6 +20,12 @@ export interface PageHeaderProps {
     showAvatar?: boolean;
     onBackPress?: () => void;
     onSearchPress?: () => void;
+    
+    // Search props
+    isSearching?: boolean;
+    searchQuery?: string;
+    onSearchQueryChange?: (text: string) => void;
+    onCloseSearch?: () => void;
 }
 
 export default function PageHeader({
@@ -29,14 +35,18 @@ export default function PageHeader({
     showAvatar = true,
     onBackPress,
     onSearchPress,
+    isSearching = false,
+    searchQuery = "",
+    onSearchQueryChange,
+    onCloseSearch,
 }: PageHeaderProps) {
     const [session, setSession] = useState<SessionData | null>(null);
 
     useEffect(() => {
-        if (showAvatar) {
+        if (showAvatar && !isSearching) {
             getSession().then(setSession);
         }
-    }, [showAvatar]);
+    }, [showAvatar, isSearching]);
 
     const handleBack = () => {
         if (onBackPress) {
@@ -49,8 +59,8 @@ export default function PageHeader({
     return (
         <View style={styles.headerContainer}>
             {/* Left Section */}
-            <View style={styles.leftCol}>
-                {showBackButton && (
+            <View style={[styles.leftCol, isSearching && styles.leftColSearch]}>
+                {!isSearching && showBackButton && (
                     <TouchableOpacity
                         onPress={handleBack}
                         style={styles.backButton}
@@ -62,46 +72,72 @@ export default function PageHeader({
                 )}
             </View>
 
-            {/* Center Title */}
+            {/* Center Section: Title or Search Input */}
             <View style={styles.titleContainer}>
-                <Text style={styles.titleText} numberOfLines={1}>
-                    {title}
-                </Text>
+                {isSearching ? (
+                    <TextInput
+                        value={searchQuery}
+                        onChangeText={onSearchQueryChange}
+                        placeholder="Search product, SKU, category..."
+                        placeholderTextColor="#94A3B8"
+                        style={styles.searchInput}
+                        autoFocus={true}
+                        returnKeyType="search"
+                        accessibilityLabel="Search activity input"
+                    />
+                ) : (
+                    <Text style={styles.titleText} numberOfLines={1}>
+                        {title}
+                    </Text>
+                )}
             </View>
 
             {/* Right Section */}
-            <View style={styles.rightCol}>
-                {showSearch && (
+            <View style={[styles.rightCol, isSearching && styles.rightColSearch]}>
+                {isSearching ? (
                     <TouchableOpacity
-                        onPress={onSearchPress}
-                        style={styles.searchButton}
+                        onPress={onCloseSearch}
+                        style={styles.closeButton}
                         activeOpacity={0.7}
-                        accessibilityLabel="Search"
+                        accessibilityLabel="Close search"
                     >
-                        <Feather name="search" size={22} color="#475569" />
+                        <Feather name="x" size={24} color="#64748B" />
                     </TouchableOpacity>
-                )}
-
-                {showAvatar && (
-                    <TouchableOpacity
-                        onPress={() => router.push("/profile")}
-                        activeOpacity={0.8}
-                        style={[
-                            styles.avatar,
-                            !session?.avatarUrl && styles.avatarInitialsContainer,
-                        ]}
-                    >
-                        {session?.avatarUrl ? (
-                            <Image
-                                source={{ uri: session.avatarUrl }}
-                                style={styles.avatarImage}
-                            />
-                        ) : (
-                            <Text style={styles.avatarInitialsText}>
-                                {getInitials(session?.name)}
-                            </Text>
+                ) : (
+                    <>
+                        {showSearch && (
+                            <TouchableOpacity
+                                onPress={onSearchPress}
+                                style={styles.searchButton}
+                                activeOpacity={0.7}
+                                accessibilityLabel="Search"
+                            >
+                                <Feather name="search" size={22} color="#475569" />
+                            </TouchableOpacity>
                         )}
-                    </TouchableOpacity>
+
+                        {showAvatar && (
+                            <TouchableOpacity
+                                onPress={() => router.push("/profile")}
+                                activeOpacity={0.8}
+                                style={[
+                                    styles.avatar,
+                                    !session?.avatarUrl && styles.avatarInitialsContainer,
+                                ]}
+                            >
+                                {session?.avatarUrl ? (
+                                    <Image
+                                        source={{ uri: session.avatarUrl }}
+                                        style={styles.avatarImage}
+                                    />
+                                ) : (
+                                    <Text style={styles.avatarInitialsText}>
+                                        {getInitials(session?.name)}
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                        )}
+                    </>
                 )}
             </View>
         </View>
@@ -123,6 +159,9 @@ const styles = StyleSheet.create({
         width: 48,
         justifyContent: "center",
     },
+    leftColSearch: {
+        width: 8,
+    },
     backButton: {
         padding: 4,
     },
@@ -143,9 +182,28 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
         width: 80,
     },
+    rightColSearch: {
+        width: 36,
+        justifyContent: "center",
+        alignItems: "flex-end",
+    },
     searchButton: {
         padding: 4,
         marginRight: 12,
+    },
+    closeButton: {
+        padding: 4,
+    },
+    searchInput: {
+        width: "100%",
+        height: 38,
+        backgroundColor: "#F1F5F9",
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        fontSize: 14,
+        color: "#1E293B",
+        borderWidth: 1,
+        borderColor: "#E2E8F0",
     },
     avatar: {
         width: 36,

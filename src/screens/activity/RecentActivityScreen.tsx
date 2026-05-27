@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -27,6 +27,10 @@ interface ActivityItemData {
     status: string;
     createdAt: Date;
     createdByName: string;
+    createdByRole?: string;
+    manufacturedDate?: string;
+    warrantyMonths?: number;
+    warrantyStatus?: string;
 }
 
 const getDayLabel = (date: Date): "TODAY" | "YESTERDAY" | "OLDER" => {
@@ -54,11 +58,9 @@ const getDayLabel = (date: Date): "TODAY" | "YESTERDAY" | "OLDER" => {
 export default function RecentActivityScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [sections, setSections] = useState<{
-        today: ActivityItemData[];
-        yesterday: ActivityItemData[];
-        older: ActivityItemData[];
-    }>({ today: [], yesterday: [], older: [] });
+    const [activities, setActivities] = useState<ActivityItemData[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isSearching, setIsSearching] = useState(false);
 
     const fetchActivities = async () => {
         try {
@@ -69,7 +71,7 @@ export default function RecentActivityScreen() {
             const snapshot = await getDocs(q);
 
             if (snapshot.empty) {
-                setSections({ today: [], yesterday: [], older: [] });
+                setActivities([]);
                 return;
             }
 
@@ -88,30 +90,14 @@ export default function RecentActivityScreen() {
                     status: data.status ?? "",
                     createdAt,
                     createdByName: data.createdByName ?? "",
+                    createdByRole: data.createdByRole ?? "",
+                    manufacturedDate: data.manufacturedDate ?? "",
+                    warrantyMonths: data.warrantyMonths ?? 0,
+                    warrantyStatus: data.warrantyStatus ?? "",
                 };
             });
 
-            // Group items into Today, Yesterday, and Older
-            const todayList: ActivityItemData[] = [];
-            const yesterdayList: ActivityItemData[] = [];
-            const olderList: ActivityItemData[] = [];
-
-            items.forEach((item) => {
-                const label = getDayLabel(item.createdAt);
-                if (label === "TODAY") {
-                    todayList.push(item);
-                } else if (label === "YESTERDAY") {
-                    yesterdayList.push(item);
-                } else {
-                    olderList.push(item);
-                }
-            });
-
-            setSections({
-                today: todayList,
-                yesterday: yesterdayList,
-                older: olderList,
-            });
+            setActivities(items);
         } catch (error: any) {
             console.error("[RecentActivityScreen] Fetch activities error:", error);
             Alert.alert("Error", "Failed to retrieve activity log history.");
@@ -160,21 +146,39 @@ export default function RecentActivityScreen() {
         fetchActivities();
     };
 
-    const handleDownloadReport = () => {
-        Alert.alert(
-            "Export Activity Report",
-            "Do you want to download a PDF report of the recent activity logs?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Download",
-                    onPress: () => {
-                        Alert.alert("Success", "Activity log report downloaded successfully.");
-                    },
-                },
-            ]
-        );
-    };
+    // Filter and group activities based on search text input
+    const sections = useMemo(() => {
+        const filtered = searchQuery
+            ? activities.filter(
+                (item) =>
+                    item.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    item.productNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    item.status.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            : activities;
+
+        const todayList: ActivityItemData[] = [];
+        const yesterdayList: ActivityItemData[] = [];
+        const olderList: ActivityItemData[] = [];
+
+        filtered.forEach((item) => {
+            const label = getDayLabel(item.createdAt);
+            if (label === "TODAY") {
+                todayList.push(item);
+            } else if (label === "YESTERDAY") {
+                yesterdayList.push(item);
+            } else {
+                olderList.push(item);
+            }
+        });
+
+        return {
+            today: todayList,
+            yesterday: yesterdayList,
+            older: olderList,
+        };
+    }, [activities, searchQuery]);
 
     const hasNoData =
         sections.today.length === 0 &&
@@ -185,13 +189,20 @@ export default function RecentActivityScreen() {
         <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-            {/* Reusable Page Header */}
+            {/* Reusable Page Header with Search Integration */}
             <PageHeader
                 title="Recent Activity"
                 showBackButton={true}
                 showSearch={true}
                 showAvatar={true}
-                onSearchPress={() => Alert.alert("Search", "Search functionality coming soon.")}
+                isSearching={isSearching}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                onSearchPress={() => setIsSearching(true)}
+                onCloseSearch={() => {
+                    setIsSearching(false);
+                    setSearchQuery("");
+                }}
             />
 
             {loading ? (
@@ -215,8 +226,12 @@ export default function RecentActivityScreen() {
                     >
                         {hasNoData ? (
                             <View style={styles.emptyContainer}>
-                                <Feather name="activity" size={48} color="#94A3B8" />
-                                <Text style={styles.emptyText}>No recent activity yet.</Text>
+                                <Feather name={searchQuery ? "search" : "activity"} size={48} color="#94A3B8" />
+                                <Text style={styles.emptyText}>
+                                    {searchQuery
+                                        ? `No results found for "${searchQuery}"`
+                                        : "No recent activity yet."}
+                                </Text>
                             </View>
                         ) : (
                             <>
@@ -233,6 +248,10 @@ export default function RecentActivityScreen() {
                                                 status={item.status}
                                                 createdAt={item.createdAt}
                                                 createdByName={item.createdByName}
+                                                createdByRole={item.createdByRole}
+                                                manufacturedDate={item.manufacturedDate}
+                                                warrantyMonths={item.warrantyMonths}
+                                                warrantyStatus={item.warrantyStatus}
                                                 isFirst={index === 0}
                                                 isLast={index === sections.today.length - 1}
                                             />
@@ -253,6 +272,10 @@ export default function RecentActivityScreen() {
                                                 status={item.status}
                                                 createdAt={item.createdAt}
                                                 createdByName={item.createdByName}
+                                                createdByRole={item.createdByRole}
+                                                manufacturedDate={item.manufacturedDate}
+                                                warrantyMonths={item.warrantyMonths}
+                                                warrantyStatus={item.warrantyStatus}
                                                 isFirst={index === 0}
                                                 isLast={index === sections.yesterday.length - 1}
                                             />
@@ -273,6 +296,10 @@ export default function RecentActivityScreen() {
                                                 status={item.status}
                                                 createdAt={item.createdAt}
                                                 createdByName={item.createdByName}
+                                                createdByRole={item.createdByRole}
+                                                manufacturedDate={item.manufacturedDate}
+                                                warrantyMonths={item.warrantyMonths}
+                                                warrantyStatus={item.warrantyStatus}
                                                 isFirst={index === 0}
                                                 isLast={index === sections.older.length - 1}
                                             />
@@ -286,15 +313,6 @@ export default function RecentActivityScreen() {
                         )}
                     </ScrollView>
 
-                    {/* Floating download button (FAB) */}
-                    <TouchableOpacity
-                        style={styles.fab}
-                        onPress={handleDownloadReport}
-                        activeOpacity={0.8}
-                        accessibilityLabel="Download Report"
-                    >
-                        <Feather name="download" size={24} color="#FFFFFF" />
-                    </TouchableOpacity>
                 </View>
             )}
         </SafeAreaView>

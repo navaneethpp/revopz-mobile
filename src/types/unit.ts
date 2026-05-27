@@ -6,7 +6,7 @@
 import { Timestamp } from "firebase/firestore";
 
 export interface ManufacturedUnit {
-    id: string;           // Firestore document ID (productNumber e.g. "1350")
+    id: string;           // Firestore document ID
     productName: string;
     productNumber: string;
     category: string;
@@ -15,6 +15,11 @@ export interface ManufacturedUnit {
     status: string;
     warrantyMonths: number;
     warrantyStatus: string;
+    createdBy?: string;
+    createdByRole?: string;
+    manufacturedDate?: string;
+    isFakeProduct?: boolean;
+    updatedAt?: Timestamp;
 }
 
 /**
