@@ -5,7 +5,8 @@
  * states. Navigation to /home is handled inside authService so the screen only
  * needs to manage UI concerns.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import * as LocalAuthentication from "expo-local-authentication";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 
 import CustomInput from "@/components/ui/CustomInput";
@@ -50,8 +51,18 @@ export default function LoginScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [biometricEnabled, setBiometricEnabled] = useState(false);
+    const [isBiometricSupported, setIsBiometricSupported] = useState(false);
     const [errors, setErrors] = useState<FormErrors>({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        Promise.all([
+            LocalAuthentication.hasHardwareAsync(),
+            LocalAuthentication.isEnrolledAsync(),
+        ]).then(([hasHardware, isEnrolled]) => {
+            setIsBiometricSupported(hasHardware && isEnrolled);
+        });
+    }, []);
 
     // Clear a specific field error as the user types
     const handleEmailChange = (value: string) => {
@@ -146,13 +157,15 @@ export default function LoginScreen() {
                 disabled={loading}
             />
 
-            <View style={{ marginTop: 8 }}>
-                <ToggleSwitch
-                    label="Biometric Access"
-                    value={biometricEnabled}
-                    onValueChange={setBiometricEnabled}
-                />
-            </View>
+            {isBiometricSupported && (
+                <View style={{ marginTop: 8 }}>
+                    <ToggleSwitch
+                        label="Biometric Access"
+                        value={biometricEnabled}
+                        onValueChange={setBiometricEnabled}
+                    />
+                </View>
+            )}
         </ScreenContainer>
     );
 }

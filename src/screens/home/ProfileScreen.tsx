@@ -3,6 +3,7 @@ import { Alert, StyleSheet, Text, View, TouchableOpacity, StatusBar, Switch, Scr
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
+import * as LocalAuthentication from "expo-local-authentication";
 import HeaderBar from "@/components/ui/HeaderBar";
 import { logoutUser } from "@/services/authService";
 import { getSession } from "@/utils/storage";
@@ -12,6 +13,7 @@ export default function ProfileScreen() {
     const [session, setSession] = useState<SessionData | null>(null);
     const [biometricEnabled, setBiometricEnabled] = useState(false);
     const [hapticEnabled, setHapticEnabled] = useState(false);
+    const [isBiometricSupported, setIsBiometricSupported] = useState(false);
 
     useEffect(() => {
         // Load user session
@@ -23,6 +25,14 @@ export default function ProfileScreen() {
         });
         SecureStore.getItemAsync("haptic_enabled").then((val) => {
             if (val !== null) setHapticEnabled(val === "true");
+        });
+
+        // Check if biometric authentication is supported and enrolled
+        Promise.all([
+            LocalAuthentication.hasHardwareAsync(),
+            LocalAuthentication.isEnrolledAsync(),
+        ]).then(([hasHardware, isEnrolled]) => {
+            setIsBiometricSupported(hasHardware && isEnrolled);
         });
     }, []);
 
@@ -86,25 +96,29 @@ export default function ProfileScreen() {
                 </View>
 
                 {/* Account Settings Category */}
-                <Text style={styles.categoryHeader}>ACCOUNT SETTINGS</Text>
-                <View style={styles.card}>
-                    <View style={styles.row}>
-                        <View style={[styles.iconBg, { backgroundColor: "#EFF6FF" }]}>
-                            <MaterialCommunityIcons name="fingerprint" size={22} color="#3B82F6" />
+                {isBiometricSupported && (
+                    <>
+                        <Text style={styles.categoryHeader}>ACCOUNT SETTINGS</Text>
+                        <View style={styles.card}>
+                            <View style={styles.row}>
+                                <View style={[styles.iconBg, { backgroundColor: "#EFF6FF" }]}>
+                                    <MaterialCommunityIcons name="fingerprint" size={22} color="#3B82F6" />
+                                </View>
+                                <View style={styles.rowText}>
+                                    <Text style={styles.rowTitle}>Biometric Login</Text>
+                                    <Text style={styles.rowSubtitle}>Face ID / Touch ID</Text>
+                                </View>
+                                <Switch
+                                    value={biometricEnabled}
+                                    onValueChange={toggleBiometric}
+                                    trackColor={{ false: "#E2E8F0", true: "#3B82F6" }}
+                                    thumbColor="#FFFFFF"
+                                    ios_backgroundColor="#E2E8F0"
+                                />
+                            </View>
                         </View>
-                        <View style={styles.rowText}>
-                            <Text style={styles.rowTitle}>Biometric Login</Text>
-                            <Text style={styles.rowSubtitle}>Face ID / Touch ID</Text>
-                        </View>
-                        <Switch
-                            value={biometricEnabled}
-                            onValueChange={toggleBiometric}
-                            trackColor={{ false: "#E2E8F0", true: "#3B82F6" }}
-                            thumbColor="#FFFFFF"
-                            ios_backgroundColor="#E2E8F0"
-                        />
-                    </View>
-                </View>
+                    </>
+                )}
 
                 {/* App Preferences Category */}
                 <Text style={styles.categoryHeader}>APP PREFERENCES</Text>
