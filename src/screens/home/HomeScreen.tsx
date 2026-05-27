@@ -13,7 +13,6 @@ import { router } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 import RecentActivityCard from "@/components/ui/RecentActivityCard";
 import ActionCard from "@/components/ui/ActionCard";
-import BottomNavigation from "@/components/ui/BottomNavigation";
 import { getSession } from "@/utils/storage";
 import { auth } from "@/config/firebase";
 import { fetchRecentActivity } from "@/services/activityService";
@@ -139,9 +138,6 @@ export default function HomeScreen() {
                     />
                 </View>
             </ScrollView>
-
-            {/* ── Bottom Navigation ── */}
-            <BottomNavigation />
         </SafeAreaView>
     );
 }
@@ -176,7 +172,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingHorizontal: 16,
-        paddingBottom: 24,
+        paddingBottom: 110,
     },
     welcome: {
         fontSize: 26,

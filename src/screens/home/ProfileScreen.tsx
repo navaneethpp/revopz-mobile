@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, View, TouchableOpacity, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import BottomNavigation from "@/components/ui/BottomNavigation";
 import { logoutUser } from "@/services/authService";
 import { getSession } from "@/utils/storage";
 import type { SessionData } from "@/types/auth";
@@ -79,9 +78,6 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
             </View>
-
-            {/* Bottom Navigation always anchored to the bottom */}
-            <BottomNavigation />
         </SafeAreaView>
     );
 }
@@ -94,6 +90,7 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: 20,
+        paddingBottom: 110,
     },
     header: {
         alignItems: "center",

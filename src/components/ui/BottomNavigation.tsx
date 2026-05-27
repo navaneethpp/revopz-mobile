@@ -1,35 +1,43 @@
 import { useEffect, useRef, useState } from "react";
 import { Feather } from "@expo/vector-icons";
-import { router, usePathname } from "expo-router";
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-export default function BottomNavigation() {
-    const path = usePathname();
-    const isHome = path === "/home" || path === "/";
-
-    // Track tab coordinates dynamically to position the sliding pill
+export default function BottomNavigation({ state, navigation }: { state: any; navigation: any }) {
+    // Layout coordinates for the sliding pill
     const [layouts, setLayouts] = useState<{
         home?: { x: number; y: number; width: number; height: number };
         profile?: { x: number; y: number; width: number; height: number };
     }>({});
 
+    const activeRouteName = state.routes[state.index].name; // 'home' or 'profile'
+    const isHome = activeRouteName === "home";
+
+    // Animated values for sliding pill
     const pillX = useRef(new Animated.Value(0)).current;
     const pillWidth = useRef(new Animated.Value(0)).current;
     const pillOpacity = useRef(new Animated.Value(0)).current;
+
+    // Animated values for tab icons scaling (micro-animations)
+    const homeScale = useRef(new Animated.Value(isHome ? 1.15 : 1)).current;
+    const profileScale = useRef(new Animated.Value(!isHome ? 1.15 : 1)).current;
 
     const activeLayout = isHome ? layouts.home : layouts.profile;
 
     useEffect(() => {
         if (activeLayout) {
             Animated.parallel([
-                Animated.timing(pillX, {
+                // Smooth spring animation for sliding pill
+                Animated.spring(pillX, {
                     toValue: activeLayout.x,
-                    duration: 220,
+                    stiffness: 220,
+                    damping: 24,
+                    mass: 0.8,
                     useNativeDriver: false,
                 }),
-                Animated.timing(pillWidth, {
+                Animated.spring(pillWidth, {
                     toValue: activeLayout.width,
-                    duration: 220,
+                    stiffness: 220,
+                    damping: 24,
+                    mass: 0.8,
                     useNativeDriver: false,
                 }),
                 Animated.timing(pillOpacity, {
@@ -37,9 +45,34 @@ export default function BottomNavigation() {
                     duration: 150,
                     useNativeDriver: false,
                 }),
+                // Spring bounce for selected icon
+                Animated.spring(homeScale, {
+                    toValue: isHome ? 1.15 : 1.0,
+                    stiffness: 250,
+                    damping: 18,
+                    useNativeDriver: true,
+                }),
+                Animated.spring(profileScale, {
+                    toValue: !isHome ? 1.15 : 1.0,
+                    stiffness: 250,
+                    damping: 18,
+                    useNativeDriver: true,
+                }),
             ]).start();
         }
     }, [isHome, activeLayout]);
+
+    const handlePress = (routeName: string) => {
+        const event = navigation.emit({
+            type: "tabPress",
+            target: routeName,
+            canPreventDefault: true,
+        });
+
+        if (!event.defaultPrevented) {
+            navigation.navigate(routeName);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -61,7 +94,7 @@ export default function BottomNavigation() {
 
             {/* Dashboard tab */}
             <TouchableOpacity
-                onPress={() => router.push("/home")}
+                onPress={() => handlePress("home")}
                 activeOpacity={0.8}
                 onLayout={(e) => {
                     const l = e.nativeEvent.layout;
@@ -72,11 +105,13 @@ export default function BottomNavigation() {
                     isHome ? styles.activeTabStyle : styles.inactiveTabStyle,
                 ]}
             >
-                <Feather
-                    name="grid"
-                    size={20}
-                    color={isHome ? "#fff" : "#6B7280"}
-                />
+                <Animated.View style={{ transform: [{ scale: homeScale }] }}>
+                    <Feather
+                        name="grid"
+                        size={20}
+                        color={isHome ? "#fff" : "#6B7280"}
+                    />
+                </Animated.View>
                 <Text
                     style={[
                         styles.tabLabel,
@@ -89,7 +124,7 @@ export default function BottomNavigation() {
 
             {/* Settings tab */}
             <TouchableOpacity
-                onPress={() => router.push("/profile")}
+                onPress={() => handlePress("profile")}
                 activeOpacity={0.8}
                 onLayout={(e) => {
                     const l = e.nativeEvent.layout;
@@ -100,11 +135,13 @@ export default function BottomNavigation() {
                     !isHome ? styles.activeTabStyle : styles.inactiveTabStyle,
                 ]}
             >
-                <Feather
-                    name="settings"
-                    size={20}
-                    color={!isHome ? "#fff" : "#6B7280"}
-                />
+                <Animated.View style={{ transform: [{ scale: profileScale }] }}>
+                    <Feather
+                        name="settings"
+                        size={20}
+                        color={!isHome ? "#fff" : "#6B7280"}
+                    />
+                </Animated.View>
                 <Text
                     style={[
                         styles.tabLabel,
@@ -120,15 +157,24 @@ export default function BottomNavigation() {
 
 const styles = StyleSheet.create({
     container: {
-        height: 68,
-        backgroundColor: "#ffffff",
-        borderTopWidth: 1,
-        borderTopColor: "#E5E7EB",
+        position: "absolute",
+        bottom: 24,
+        left: 20,
+        right: 20,
+        height: 64,
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        borderRadius: 24,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-around",
-        paddingHorizontal: 16,
-        position: "relative",
+        paddingHorizontal: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 6,
+        borderWidth: 1,
+        borderColor: "rgba(229, 231, 235, 0.5)",
     },
     tab: {
         flexDirection: "column",
