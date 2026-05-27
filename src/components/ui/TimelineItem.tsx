@@ -1,5 +1,4 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 export interface TimelineItemProps {
@@ -16,6 +15,7 @@ export interface TimelineItemProps {
     warrantyStatus?: string;
     isFirst?: boolean;
     isLast?: boolean;
+    onPress?: () => void;
 }
 
 export default function TimelineItem({
@@ -32,6 +32,7 @@ export default function TimelineItem({
     warrantyStatus = "",
     isFirst = false,
     isLast = false,
+    onPress,
 }: TimelineItemProps) {
     // Normalize status to one of the 4 activity types
     const norm = (status || "").toLowerCase();
@@ -190,7 +191,12 @@ export default function TimelineItem({
             </View>
 
             {/* Main Card Content */}
-            <View style={styles.card}>
+            <TouchableOpacity
+                style={styles.card}
+                onPress={onPress}
+                activeOpacity={0.85}
+                disabled={!onPress}
+            >
                 {/* Status Label and Time Row */}
                 <View style={styles.cardHeader}>
                     <Text style={[styles.statusLabel, { color: config.badgeColor }]}>
@@ -271,7 +277,7 @@ export default function TimelineItem({
                         {config.highlightRight}
                     </Text>
                 </View>
-            </View>
+            </TouchableOpacity>
         </View>
     );
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Modal,
     RefreshControl,
     ScrollView,
     StatusBar,
@@ -55,12 +56,39 @@ const getDayLabel = (date: Date): "TODAY" | "YESTERDAY" | "OLDER" => {
     }
 };
 
+const DetailRow = ({ label, value, icon }: { label: string; value: string; icon: any }) => (
+    <View style={styles.detailRow}>
+        <View style={styles.detailIconContainer}>
+            <Feather name={icon} size={16} color="#1565C0" />
+        </View>
+        <View style={styles.detailTextContainer}>
+            <Text style={styles.detailLabel}>{label}</Text>
+            <Text style={styles.detailValue}>{value}</Text>
+        </View>
+    </View>
+);
+
+const getStatusColor = (status: string) => {
+    const norm = (status || "").toLowerCase();
+    if (norm === "ready" || norm.includes("complete") || norm.includes("manufactur")) {
+        return { bg: "#ECFDF5", text: "#059669" };
+    } else if (norm.includes("fail") || norm.includes("test")) {
+        return { bg: "#FEF2F2", text: "#DC2626" };
+    } else if (norm.includes("pass") || norm.includes("quality") || norm.includes("qa")) {
+        return { bg: "#FFFBEB", text: "#D97706" };
+    } else if (norm.includes("transfer") || norm.includes("warehouse") || norm.includes("logistics")) {
+        return { bg: "#EFF6FF", text: "#2563EB" };
+    }
+    return { bg: "#F1F5F9", text: "#64748B" }; // default
+};
+
 export default function RecentActivityScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [activities, setActivities] = useState<ActivityItemData[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<ActivityItemData | null>(null);
 
     const fetchActivities = async () => {
         try {
@@ -254,6 +282,7 @@ export default function RecentActivityScreen() {
                                                 warrantyStatus={item.warrantyStatus}
                                                 isFirst={index === 0}
                                                 isLast={index === sections.today.length - 1}
+                                                onPress={() => setSelectedItem(item)}
                                             />
                                         ))}
                                     </TimelineSection>
@@ -278,6 +307,7 @@ export default function RecentActivityScreen() {
                                                 warrantyStatus={item.warrantyStatus}
                                                 isFirst={index === 0}
                                                 isLast={index === sections.yesterday.length - 1}
+                                                onPress={() => setSelectedItem(item)}
                                             />
                                         ))}
                                     </TimelineSection>
@@ -302,6 +332,7 @@ export default function RecentActivityScreen() {
                                                 warrantyStatus={item.warrantyStatus}
                                                 isFirst={index === 0}
                                                 isLast={index === sections.older.length - 1}
+                                                onPress={() => setSelectedItem(item)}
                                             />
                                         ))}
                                     </TimelineSection>
@@ -315,6 +346,98 @@ export default function RecentActivityScreen() {
 
                 </View>
             )}
+
+            {/* Details Modal Popup Overlay */}
+            <Modal
+                visible={selectedItem !== null}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setSelectedItem(null)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        {/* Header */}
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalHeaderTitle}>Activity Details</Text>
+                            <TouchableOpacity
+                                onPress={() => setSelectedItem(null)}
+                                style={styles.modalCloseButton}
+                                activeOpacity={0.7}
+                                accessibilityLabel="Close details"
+                            >
+                                <Feather name="x" size={24} color="#64748B" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {selectedItem && (
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                style={styles.modalBody}
+                            >
+                                {/* Product Name */}
+                                <Text style={styles.modalProductName}>{selectedItem.productName}</Text>
+
+                                {/* Status Badge */}
+                                <View style={styles.modalStatusRow}>
+                                    <View
+                                        style={[
+                                            styles.modalStatusBadge,
+                                            { backgroundColor: getStatusColor(selectedItem.status).bg },
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.modalStatusText,
+                                                { color: getStatusColor(selectedItem.status).text },
+                                            ]}
+                                        >
+                                            {selectedItem.status.toUpperCase()}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* Info Grid */}
+                                <View style={styles.modalInfoGrid}>
+                                    <DetailRow label="Product Number (SKU)" value={selectedItem.productNumber} icon="package" />
+                                    <DetailRow label="Category" value={selectedItem.category} icon="tag" />
+                                    <DetailRow label="Manufactured Date" value={selectedItem.manufacturedDate || "N/A"} icon="calendar" />
+                                    <DetailRow
+                                        label="Warranty Duration"
+                                        value={`${selectedItem.warrantyMonths} Months`}
+                                        icon="shield"
+                                    />
+                                    <DetailRow
+                                        label="Warranty Registration"
+                                        value={selectedItem.warrantyStatus === "not_registered" ? "Not Registered" : "Registered"}
+                                        icon="file-text"
+                                    />
+                                    <DetailRow
+                                        label="Logged By"
+                                        value={`${selectedItem.createdByName} (${selectedItem.createdByRole || "Operator"})`}
+                                        icon="user"
+                                    />
+                                    <DetailRow
+                                        label="Logged At"
+                                        value={selectedItem.createdAt.toLocaleString()}
+                                        icon="clock"
+                                    />
+                                </View>
+                            </ScrollView>
+                        )}
+
+                        {/* Modal Footer Buttons */}
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity
+                                style={styles.modalConfirmBtn}
+                                onPress={() => setSelectedItem(null)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={styles.modalConfirmText}>Close</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -377,5 +500,120 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         elevation: 6,
         zIndex: 10,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(15, 23, 42, 0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    modalContent: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 24,
+        width: "100%",
+        maxHeight: "85%",
+        padding: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#F1F5F9",
+        marginBottom: 16,
+    },
+    modalHeaderTitle: {
+        fontSize: 18,
+        fontWeight: "700",
+        color: "#1E293B",
+    },
+    modalCloseButton: {
+        padding: 4,
+    },
+    modalBody: {
+        marginBottom: 20,
+    },
+    modalProductName: {
+        fontSize: 20,
+        fontWeight: "800",
+        color: "#111827",
+        lineHeight: 28,
+        marginBottom: 12,
+    },
+    modalStatusRow: {
+        flexDirection: "row",
+        marginBottom: 20,
+    },
+    modalStatusBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    modalStatusText: {
+        fontSize: 12,
+        fontWeight: "700",
+        letterSpacing: 0.5,
+    },
+    modalInfoGrid: {
+        backgroundColor: "#F8FAFC",
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: "#E2E8F0",
+    },
+    detailRow: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        marginBottom: 16,
+    },
+    detailIconContainer: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: "#EFF6FF",
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 12,
+        marginTop: 2,
+    },
+    detailTextContainer: {
+        flex: 1,
+    },
+    detailLabel: {
+        fontSize: 11,
+        color: "#64748B",
+        fontWeight: "600",
+        marginBottom: 2,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+    },
+    detailValue: {
+        fontSize: 14,
+        color: "#1E293B",
+        fontWeight: "600",
+    },
+    modalFooter: {
+        borderTopWidth: 1,
+        borderTopColor: "#F1F5F9",
+        paddingTop: 16,
+    },
+    modalConfirmBtn: {
+        backgroundColor: "#1565C0",
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    modalConfirmText: {
+        color: "#FFFFFF",
+        fontSize: 16,
+        fontWeight: "700",
     },
 });
