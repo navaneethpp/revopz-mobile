@@ -8,7 +8,7 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
         profile?: { x: number; y: number; width: number; height: number };
     }>({});
 
-    const activeRouteName = state.routes[state.index].name; // 'home' or 'profile'
+    const activeRouteName = state?.routes?.[state?.index]?.name || "home";
     const isHome = activeRouteName === "home";
 
     // Animated values for sliding pill
