@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     brand: {
         fontSize: 22,
         fontWeight: "800",
-        color: "#1565C0",
+        color: "#D97706",
         letterSpacing: -0.5,
     },
     avatar: {
