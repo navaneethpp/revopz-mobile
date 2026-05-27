@@ -8,6 +8,7 @@ export interface AdminUser {
     role: string;
     status: string;
     permissions: string[];
+    avatarUrl?: string;
 }
 
 /**
@@ -20,4 +21,5 @@ export interface SessionData {
     role: string;
     permissions: string[];
     isLoggedIn: boolean;
+    avatarUrl?: string;
 }
