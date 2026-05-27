@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from "react";
 import * as LocalAuthentication from "expo-local-authentication";
+import * as SecureStore from "expo-secure-store";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 
 import CustomInput from "@/components/ui/CustomInput";
@@ -62,6 +63,11 @@ export default function LoginScreen() {
         ]).then(([hasHardware, isEnrolled]) => {
             setIsBiometricSupported(hasHardware && isEnrolled);
         });
+
+        // Load initial biometric preference
+        SecureStore.getItemAsync("biometric_enabled").then((val) => {
+            if (val !== null) setBiometricEnabled(val === "true");
+        });
     }, []);
 
     // Clear a specific field error as the user types
@@ -88,6 +94,8 @@ export default function LoginScreen() {
         // 2. Attempt login
         setLoading(true);
         try {
+            // Save biometric access preference before navigating/completing login
+            await SecureStore.setItemAsync("biometric_enabled", biometricEnabled ? "true" : "false");
             // loginUser handles navigation internally on success
             await loginUser(email, password);
         } catch (err: any) {

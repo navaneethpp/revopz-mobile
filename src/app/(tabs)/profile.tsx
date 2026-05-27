@@ -1,5 +1,5 @@
-import ProfileScreen from "@/screens/home/ProfileScreen";
+import SettingsScreen from "@/screens/home/SettingsScreen";
 
 export default function ProfileRoute() {
-  return <ProfileScreen />;
+  return <SettingsScreen />;
 }

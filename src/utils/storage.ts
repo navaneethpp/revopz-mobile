@@ -52,7 +52,10 @@ export async function getSession(): Promise<SessionData | null> {
  */
 export async function clearSession(): Promise<void> {
     try {
-        await SecureStore.deleteItemAsync(KEYS.SESSION);
+        await Promise.all([
+            SecureStore.deleteItemAsync(KEYS.SESSION),
+            SecureStore.deleteItemAsync("biometric_enabled"),
+        ]);
     } catch (err) {
         // Nothing the user can do; swallow silently but log for debugging.
         console.warn("[storage] clearSession failed:", err);

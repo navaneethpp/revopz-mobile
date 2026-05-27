@@ -9,11 +9,12 @@ import { logoutUser } from "@/services/authService";
 import { getSession } from "@/utils/storage";
 import type { SessionData } from "@/types/auth";
 
-export default function ProfileScreen() {
+export default function SettingsScreen() {
     const [session, setSession] = useState<SessionData | null>(null);
     const [biometricEnabled, setBiometricEnabled] = useState(false);
     const [hapticEnabled, setHapticEnabled] = useState(false);
     const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+    const [authStatus, setAuthStatus] = useState("Checking...");
 
     useEffect(() => {
         // Load user session
@@ -34,14 +35,53 @@ export default function ProfileScreen() {
         ]).then(([hasHardware, isEnrolled]) => {
             setIsBiometricSupported(hasHardware && isEnrolled);
         });
+
+        // Query active authentication status
+        (async () => {
+            const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+            const enrolled = await LocalAuthentication.isEnrolledAsync();
+            if (!enrolled) {
+                setAuthStatus("Not Configured");
+                return;
+            }
+            if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+                setAuthStatus("Face ID / Face Recognition");
+            } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+                setAuthStatus("Fingerprint / Touch ID");
+            } else if (types.includes(LocalAuthentication.AuthenticationType.IRIS)) {
+                setAuthStatus("Iris Recognition");
+            } else {
+                setAuthStatus("Device PIN / Passcode");
+            }
+        })();
     }, []);
 
     const toggleBiometric = async (value: boolean) => {
-        setBiometricEnabled(value);
-        try {
-            await SecureStore.setItemAsync("biometric_enabled", value ? "true" : "false");
-        } catch (e) {
-            console.warn("Failed to save biometric preference:", e);
+        if (value) {
+            try {
+                const result = await LocalAuthentication.authenticateAsync({
+                    promptMessage: "Confirm identity to enable Biometric Login",
+                    fallbackLabel: "Use PIN/Passcode",
+                    disableDeviceFallback: false,
+                });
+
+                if (result.success) {
+                    setBiometricEnabled(true);
+                    await SecureStore.setItemAsync("biometric_enabled", "true");
+                    Alert.alert("Success", "Biometric Login enabled successfully.");
+                } else {
+                    setBiometricEnabled(false);
+                    await SecureStore.setItemAsync("biometric_enabled", "false");
+                }
+            } catch (e) {
+                console.error("Biometric confirmation failed:", e);
+                setBiometricEnabled(false);
+                await SecureStore.setItemAsync("biometric_enabled", "false");
+                Alert.alert("Error", "Authentication failed. Please try again.");
+            }
+        } else {
+            setBiometricEnabled(false);
+            await SecureStore.setItemAsync("biometric_enabled", "false");
         }
     };
 
@@ -83,30 +123,31 @@ export default function ProfileScreen() {
                 {/* User Profile Card */}
                 <View style={styles.profileCard}>
                     <Text style={styles.profileName}>{session?.name ?? "User"}</Text>
-                    
+
                     <View style={styles.actionButtons}>
                         <TouchableOpacity style={styles.editProfileBtn} activeOpacity={0.85}>
                             <Text style={styles.editProfileText}>EDIT PROFILE</Text>
                         </TouchableOpacity>
-                        
+
                         <TouchableOpacity style={styles.passwordBtn} activeOpacity={0.85}>
                             <Text style={styles.passwordText}>PASSWORD</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Account Settings Category */}
+                {/* Security Category */}
                 {isBiometricSupported && (
                     <>
-                        <Text style={styles.categoryHeader}>ACCOUNT SETTINGS</Text>
+                        <Text style={styles.categoryHeader}>SECURITY</Text>
                         <View style={styles.card}>
+                            {/* Use Biometric Login Toggle */}
                             <View style={styles.row}>
                                 <View style={[styles.iconBg, { backgroundColor: "#EFF6FF" }]}>
                                     <MaterialCommunityIcons name="fingerprint" size={22} color="#3B82F6" />
                                 </View>
                                 <View style={styles.rowText}>
-                                    <Text style={styles.rowTitle}>Biometric Login</Text>
-                                    <Text style={styles.rowSubtitle}>Face ID / Touch ID</Text>
+                                    <Text style={styles.rowTitle}>Use Biometric Login</Text>
+                                    <Text style={styles.rowSubtitle}>Require authentication on launch</Text>
                                 </View>
                                 <Switch
                                     value={biometricEnabled}
@@ -115,6 +156,20 @@ export default function ProfileScreen() {
                                     thumbColor="#FFFFFF"
                                     ios_backgroundColor="#E2E8F0"
                                 />
+                            </View>
+
+                            {/* Divider */}
+                            <View style={styles.rowDivider} />
+
+                            {/* Authentication Status */}
+                            <View style={styles.row}>
+                                <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
+                                    <MaterialCommunityIcons name="shield-check-outline" size={22} color="#64748B" />
+                                </View>
+                                <View style={styles.rowText}>
+                                    <Text style={styles.rowTitle}>Authentication Status</Text>
+                                    <Text style={styles.rowSubtitle}>{authStatus}</Text>
+                                </View>
                             </View>
                         </View>
                     </>
@@ -257,6 +312,12 @@ const styles = StyleSheet.create({
     row: {
         flexDirection: "row",
         alignItems: "center",
+    },
+    rowDivider: {
+        height: 1,
+        backgroundColor: "#F1F5F9",
+        marginVertical: 12,
+        marginLeft: 52,
     },
     iconBg: {
         width: 40,
