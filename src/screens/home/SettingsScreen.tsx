@@ -7,6 +7,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import HeaderBar from "@/components/ui/HeaderBar";
 import { logoutUser } from "@/services/authService";
 import { getSession } from "@/utils/storage";
+import { triggerHaptic, updateHapticsCache } from "@/utils/haptics";
 import type { SessionData } from "@/types/auth";
 
 export default function SettingsScreen() {
@@ -69,6 +70,10 @@ export default function SettingsScreen() {
         setHapticEnabled(value);
         try {
             await SecureStore.setItemAsync("haptic_enabled", value ? "true" : "false");
+            updateHapticsCache(value);
+            if (value) {
+                triggerHaptic("success");
+            }
         } catch (e) {
             console.warn("Failed to save haptic preference:", e);
         }
@@ -119,7 +124,7 @@ export default function SettingsScreen() {
                 {isBiometricSupported && (
                     <>
                         <Text style={styles.categoryHeader}>SECURITY</Text>
-                        <View style={styles.card}>
+                        <TouchableOpacity style={styles.card} activeOpacity={0.8}>
                             {/* Use Biometric Login Toggle */}
                             <View style={styles.row}>
                                 <View style={[styles.iconBg, { backgroundColor: "#EFF6FF" }]}>
@@ -137,13 +142,13 @@ export default function SettingsScreen() {
                                     ios_backgroundColor="#E2E8F0"
                                 />
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     </>
                 )}
 
                 {/* App Preferences Category */}
                 <Text style={styles.categoryHeader}>APP PREFERENCES</Text>
-                <View style={styles.card}>
+                <TouchableOpacity activeOpacity={0.8} style={styles.card}>
                     <View style={styles.row}>
                         <View style={[styles.iconBg, { backgroundColor: "#ECFDF5" }]}>
                             <MaterialCommunityIcons name="vibrate" size={22} color="#10B981" />
@@ -160,11 +165,11 @@ export default function SettingsScreen() {
                             ios_backgroundColor="#E2E8F0"
                         />
                     </View>
-                </View>
+                </TouchableOpacity>
 
                 {/* System Category */}
                 <Text style={styles.categoryHeader}>SYSTEM</Text>
-                <View style={styles.card}>
+                <TouchableOpacity activeOpacity={0.8} style={styles.card}>
                     <View style={styles.row}>
                         <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
                             <MaterialCommunityIcons name="information-outline" size={22} color="#64748B" />
@@ -174,7 +179,7 @@ export default function SettingsScreen() {
                         </View>
                         <Text style={styles.versionText}>v2.4.0</Text>
                     </View>
-                </View>
+                </TouchableOpacity>
 
                 {/* Logout Button */}
                 <TouchableOpacity
