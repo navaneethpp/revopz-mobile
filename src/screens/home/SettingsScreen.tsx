@@ -14,7 +14,6 @@ export default function SettingsScreen() {
     const [biometricEnabled, setBiometricEnabled] = useState(false);
     const [hapticEnabled, setHapticEnabled] = useState(false);
     const [isBiometricSupported, setIsBiometricSupported] = useState(false);
-    const [authStatus, setAuthStatus] = useState("Checking...");
 
     useEffect(() => {
         // Load user session
@@ -35,25 +34,6 @@ export default function SettingsScreen() {
         ]).then(([hasHardware, isEnrolled]) => {
             setIsBiometricSupported(hasHardware && isEnrolled);
         });
-
-        // Query active authentication status
-        (async () => {
-            const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-            const enrolled = await LocalAuthentication.isEnrolledAsync();
-            if (!enrolled) {
-                setAuthStatus("Not Configured");
-                return;
-            }
-            if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-                setAuthStatus("Face ID / Face Recognition");
-            } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-                setAuthStatus("Fingerprint / Touch ID");
-            } else if (types.includes(LocalAuthentication.AuthenticationType.IRIS)) {
-                setAuthStatus("Iris Recognition");
-            } else {
-                setAuthStatus("Device PIN / Passcode");
-            }
-        })();
     }, []);
 
     const toggleBiometric = async (value: boolean) => {
@@ -156,20 +136,6 @@ export default function SettingsScreen() {
                                     thumbColor="#FFFFFF"
                                     ios_backgroundColor="#E2E8F0"
                                 />
-                            </View>
-
-                            {/* Divider */}
-                            <View style={styles.rowDivider} />
-
-                            {/* Authentication Status */}
-                            <View style={styles.row}>
-                                <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
-                                    <MaterialCommunityIcons name="shield-check-outline" size={22} color="#64748B" />
-                                </View>
-                                <View style={styles.rowText}>
-                                    <Text style={styles.rowTitle}>Authentication Status</Text>
-                                    <Text style={styles.rowSubtitle}>{authStatus}</Text>
-                                </View>
                             </View>
                         </View>
                     </>
