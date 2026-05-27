@@ -1,7 +1,14 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ActivityItem from "./ActivityItem";
+import type { ActivityItem as ActivityItemData } from "@/services/activityService";
 
-export default function RecentActivityCard() {
+type Props = {
+    entries?: ActivityItemData[];
+    loading?: boolean;
+};
+
+export default function RecentActivityCard({ entries = [], loading = false }: Props) {
+
     return (
         <View style={styles.card}>
             {/* Header row */}
@@ -12,19 +19,31 @@ export default function RecentActivityCard() {
                 </TouchableOpacity>
             </View>
 
-            <ActivityItem
-                title="Units Added: Titanium Drill Bits"
-                subtitle="12 units added to Warehouse A • 5 mins ago"
-            />
-            <ActivityItem
-                title="Units Added: Industrial Grade Servo"
-                subtitle="24 units added to Warehouse B • 15 mins ago"
-            />
-            <ActivityItem
-                title="Units Added: Pneumatic Actuator"
-                subtitle="8 units added to Warehouse A • 45 mins ago"
-                isLast
-            />
+            {/* Loading state */}
+            {loading && (
+                <View style={styles.centerBox}>
+                    <ActivityIndicator size="small" color="#1565C0" />
+                    <Text style={styles.loadingText}>Loading activity…</Text>
+                </View>
+            )}
+
+            {/* Empty state */}
+            {!loading && entries.length === 0 && (
+                <View style={styles.centerBox}>
+                    <Text style={styles.emptyText}>No recent activity yet.</Text>
+                </View>
+            )}
+
+            {/* Live entries */}
+            {!loading &&
+                entries.map((entry, index) => (
+                    <ActivityItem
+                        key={entry.id}
+                        title={entry.title}
+                        subtitle={entry.subtitle}
+                        isLast={index === entries.length - 1}
+                    />
+                ))}
         </View>
     );
 }
@@ -52,5 +71,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "600",
         color: "#1565C0",
+    },
+    centerBox: {
+        alignItems: "center",
+        paddingVertical: 16,
+    },
+    loadingText: {
+        fontSize: 13,
+        color: "#6B7280",
+        marginTop: 8,
+    },
+    emptyText: {
+        fontSize: 14,
+        color: "#9CA3AF",
     },
 });

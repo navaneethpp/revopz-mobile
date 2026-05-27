@@ -9,8 +9,11 @@ type Props = {
 export default function ActivityItem({ title, subtitle, isLast }: Props) {
     return (
         <View style={[styles.row, isLast && { marginBottom: 0 }]}>
-            {/* Blue bullet dot */}
-            <View style={styles.dot} />
+            {/* Timeline Column */}
+            <View style={styles.timelineCol}>
+                <View style={styles.dot} />
+                {!isLast && <View style={styles.line} />}
+            </View>
 
             {/* Text content */}
             <View style={styles.textBlock}>
@@ -27,14 +30,28 @@ const styles = StyleSheet.create({
         alignItems: "flex-start",
         marginBottom: 18,
     },
+    timelineCol: {
+        width: 8,
+        marginRight: 12,
+        alignItems: "center",
+        alignSelf: "stretch",
+        position: "relative",
+    },
     dot: {
         width: 8,
         height: 8,
         borderRadius: 4,
         backgroundColor: "#1565C0",
         marginTop: 6,
-        marginRight: 12,
         flexShrink: 0,
+    },
+    line: {
+        position: "absolute",
+        top: 14,
+        bottom: -14, // stops before the next dot to leave a small gap
+        width: 1.5,
+        backgroundColor: "#CBD5E1",
+        left: 3.25, // center of the 8px wide column ((8 - 1.5) / 2)
     },
     textBlock: {
         flex: 1,
