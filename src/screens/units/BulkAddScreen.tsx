@@ -17,6 +17,8 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 
+import { scanEvents } from "@/utils/scanEvents";
+
 import PageHeader from "@/components/ui/PageHeader";
 import ProductSelector from "@/components/ui/ProductSelector";
 import ScanBanner from "@/components/ui/ScanBanner";
@@ -77,11 +79,88 @@ export default function BulkAddScreen() {
         Keyboard.dismiss();
     };
 
-    // Simulated Scan Handler
-    const handleSimulateScan = () => {
+    // Process Scanned Barcodes
+    const processScannedBarcodes = async (serials: string[]) => {
+        if (serials.length === 0) return;
+
+        // Filter out serials already in the local scannedList to avoid local duplicates
+        const uniqueNewSerials = serials.filter(
+            (s) => s && !scannedList.some((item) => item && item.serial === s)
+        );
+
+        if (uniqueNewSerials.length === 0) {
+            Alert.alert("No New Items", "All scanned barcodes are already present in your current batch list.");
+            return;
+        }
+
+        setAddingManualSerial(true);
+        const verifiedList: ScannedUnit[] = [];
+        const duplicatesInDb: string[] = [];
+        const failedSerials: string[] = [];
+
+        try {
+            await Promise.all(
+                uniqueNewSerials.map(async (serial) => {
+                    try {
+                        const docRef = doc(db, "manufactured_units", serial);
+                        const docSnap = await getDoc(docRef);
+                        if (docSnap.exists()) {
+                            duplicatesInDb.push(serial);
+                        } else {
+                            verifiedList.push({ serial, status: "VERIFIED SUCCESS" });
+                        }
+                    } catch (err) {
+                        console.error(`[BulkAddScreen] Failed to verify serial ${serial}:`, err);
+                        failedSerials.push(serial);
+                    }
+                })
+            );
+
+            // Add the verified ones to scannedList
+            if (verifiedList.length > 0) {
+                setScannedList((prev) => [...prev, ...verifiedList]);
+            }
+
+            // Report results
+            if (duplicatesInDb.length > 0 || failedSerials.length > 0) {
+                let message = "";
+                if (duplicatesInDb.length > 0) {
+                    message += `The following serial numbers already exist in the database and were excluded:\n${duplicatesInDb.join("\n")}\n\n`;
+                }
+                if (failedSerials.length > 0) {
+                    message += `Failed to verify the following serial numbers due to connection issues:\n${failedSerials.join("\n")}`;
+                }
+                Alert.alert("Verification Results", message.trim());
+            } else if (verifiedList.length > 0) {
+                triggerHaptic("success");
+            }
+        } catch (err) {
+            console.error("[BulkAddScreen] Failed to verify scanned batch:", err);
+            Alert.alert("Verification Error", "An error occurred while verifying the scanned serial numbers.");
+        } finally {
+            setAddingManualSerial(false);
+        }
+    };
+
+    // Camera Scan Handler
+    const handleScanBarcode = () => {
         if (submitting || addingManualSerial) return;
         dismissKeyboard();
-        Alert.alert("Scan Serial Numbers", "This feature will be updated soon.");
+
+        const currentSerials = scannedList.map((item) => item.serial);
+
+        scanEvents.setCallback((serials) => {
+            processScannedBarcodes(serials);
+        });
+
+        router.push({
+            pathname: "/scanner",
+            params: {
+                mode: "bulk",
+                targetQty: 24,
+                initialSerials: JSON.stringify(currentSerials),
+            },
+        } as any);
     };
 
     // Manual Add Handler
@@ -218,7 +297,7 @@ export default function BulkAddScreen() {
 
                     {/* 2. Reusable Scan Serial Numbers Banner */}
                     <ScanBanner
-                        onPress={handleSimulateScan}
+                        onPress={handleScanBarcode}
                         disabled={submitting || addingManualSerial}
                     />
 
