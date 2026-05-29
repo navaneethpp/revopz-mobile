@@ -40,9 +40,10 @@ export default function BulkAddScreen() {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [productDropdownOpen, setProductDropdownOpen] = useState(false);
 
-    const [totalQty, setTotalQty] = useState(24);
     const [serialInput, setSerialInput] = useState("");
     const [scannedList, setScannedList] = useState<ScannedUnit[]>([]);
+    
+    const totalQty = scannedList.length;
     const [submitting, setSubmitting] = useState(false);
 
     // Fetch products on mount
@@ -92,11 +93,6 @@ export default function BulkAddScreen() {
             return;
         }
 
-        if (scannedList.length >= totalQty) {
-            Alert.alert("Limit Reached", `Cannot add more units. The batch size is configured to ${totalQty}.`);
-            return;
-        }
-
         // Check if already in local scanned list
         if (scannedList.some((item) => item.serial === trimmedSerial)) {
             Alert.alert("Duplicate Item", `Serial number "${trimmedSerial}" is already in this batch list.`);
@@ -132,7 +128,7 @@ export default function BulkAddScreen() {
     // Remove Scanned Item
     const handleRemoveItem = (serial: string) => {
         triggerHaptic("light");
-        setScannedList((prev) => prev.filter((item) => item.serial !== serial));
+        setScannedList((prev) => prev.filter((item) => item && item.serial !== serial));
     };
 
     // Submit Batch Handler
@@ -149,7 +145,9 @@ export default function BulkAddScreen() {
 
         setSubmitting(true);
         try {
-            const productNumbers = scannedList.map((item) => item.serial);
+            const productNumbers = scannedList
+                .filter((item) => item && item.serial)
+                .map((item) => item.serial);
             
             await registerUnitsBatch({
                 productName: selectedProduct.name,
@@ -170,8 +168,7 @@ export default function BulkAddScreen() {
         }
     };
 
-    // Calculate progress percentage
-    const progressPercent = Math.min(100, Math.round((scannedList.length / totalQty) * 100)) || 0;
+
 
     return (
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -282,17 +279,9 @@ export default function BulkAddScreen() {
                     <View style={styles.card}>
                         <Text style={styles.cardLabel}>TOTAL QTY</Text>
                         <View style={styles.qtyContainer}>
-                            <TextInput
-                                style={styles.qtyInput}
-                                keyboardType="number-pad"
-                                value={String(totalQty)}
-                                onChangeText={(val) => {
-                                    const parsed = parseInt(val, 10);
-                                    setTotalQty(isNaN(parsed) || parsed <= 0 ? 0 : parsed);
-                                }}
-                                selectTextOnFocus
-                                returnKeyType="done"
-                            />
+                            <Text style={styles.qtyDisplayText}>
+                                {totalQty}
+                            </Text>
                         </View>
                     </View>
 
@@ -303,38 +292,32 @@ export default function BulkAddScreen() {
                             <View style={styles.progressPill}>
                                 <Text style={styles.progressPillLabel}>MANUAL ENTRY</Text>
                                 <Text style={styles.progressPillValue}>
-                                    {scannedList.length} / {totalQty}
+                                    {scannedList.length}
                                 </Text>
                             </View>
                         </View>
 
                         {/* Scanned Items Map */}
                         <View style={styles.listContainer}>
-                            {scannedList.map((item) => (
-                                <View key={item.serial} style={styles.listItem}>
-                                    <View>
-                                        <Text style={styles.itemSerial}>{item.serial}</Text>
-                                        <Text style={styles.itemStatus}>{item.status}</Text>
+                            {scannedList && scannedList.map((item) => {
+                                if (!item || !item.serial) return null;
+                                return (
+                                    <View key={item.serial} style={styles.listItem}>
+                                        <View>
+                                            <Text style={styles.itemSerial}>{item.serial}</Text>
+                                            <Text style={styles.itemStatus}>{item.status}</Text>
+                                        </View>
+                                        <TouchableOpacity
+                                            onPress={() => handleRemoveItem(item.serial)}
+                                            style={styles.deleteBtn}
+                                            activeOpacity={0.7}
+                                            accessibilityLabel={`Remove serial ${item.serial}`}
+                                        >
+                                            <Feather name="trash-2" size={18} color="#DC2626" />
+                                        </TouchableOpacity>
                                     </View>
-                                    <TouchableOpacity
-                                        onPress={() => handleRemoveItem(item.serial)}
-                                        style={styles.deleteBtn}
-                                        activeOpacity={0.7}
-                                        accessibilityLabel={`Remove serial ${item.serial}`}
-                                    >
-                                        <Feather name="trash-2" size={18} color="#DC2626" />
-                                    </TouchableOpacity>
-                                </View>
-                            ))}
-
-                            {scannedList.length < totalQty && (
-                                <Text style={styles.progressHelper}>Scanning in progress...</Text>
-                            )}
-                        </View>
-
-                        {/* Progress Bar */}
-                        <View style={styles.progressBarContainer}>
-                            <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+                                );
+                            })}
                         </View>
                     </View>
                 </ScrollView>
@@ -583,13 +566,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    qtyInput: {
+    qtyDisplayText: {
         fontSize: 22,
         fontWeight: FONT_WEIGHT.bold as any,
         color: "#0B57D0",
-        width: "100%",
         textAlign: "center",
-        height: "100%",
     },
     /* 5. Scanned Items List card */
     scannedHeader: {
