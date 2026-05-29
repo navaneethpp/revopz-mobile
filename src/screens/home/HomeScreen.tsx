@@ -8,35 +8,60 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
-import { onAuthStateChanged } from "firebase/auth";
+
+import { router } from "expo-router";
 import HeaderBar from "@/components/ui/HeaderBar";
 import RecentActivityCard from "@/components/ui/RecentActivityCard";
 import ActionCard from "@/components/ui/ActionCard";
 import { getSession } from "@/utils/storage";
-import { auth } from "@/config/firebase";
 import { fetchRecentActivity } from "@/services/activityService";
+import { useAuth } from "@/context/AuthContext";
+import { logoutUser } from "@/services/authService";
 import type { ActivityItem } from "@/services/activityService";
 
 export default function HomeScreen() {
+    const { user, authReady } = useAuth();
     const [name, setName] = useState("User");
     const [activityEntries, setActivityEntries] = useState<ActivityItem[]>([]);
-    // Keep loading=true until auth resolves AND the fetch finishes
+    // Stay in loading state until auth is resolved AND the Firestore fetch finishes.
+    // Initialise to true so we never flash "No recent activity yet" during startup.
     const [activityLoading, setActivityLoading] = useState(true);
 
-    // Load the logged-in user's name from SecureStore
+    // Load the logged-in user's display name from SecureStore
     useEffect(() => {
         getSession().then((session) => {
             if (session?.name) setName(session.name);
         });
     }, []);
 
-    // Fetch recent activity — wait for Firebase Auth to restore the session
-    // before querying Firestore to avoid "Missing or insufficient permissions".
+    // ─────────────────────────────────────────────────────────────────────────
+    // Fetch recent activity — only after Firebase Auth has finished restoring
+    // the persisted session from AsyncStorage (authReady === true).
+    //
+    // WHY authReady MATTERS
+    // ─────────────────────
+    // On app reopen, auth.currentUser is null while Firebase is asynchronously
+    // reading the token from AsyncStorage. Reading currentUser synchronously or
+    // acting on the first onAuthStateChanged(null) emission causes Firestore
+    // queries to run without credentials → permission-denied / empty results.
+    //
+    // AuthContext's onAuthStateChanged listener sets authReady=true only after
+    // Firebase emits its final resolved state, so by the time this effect runs
+    // with authReady===true, the user token is guaranteed to be valid.
+    // ─────────────────────────────────────────────────────────────────────────
     useEffect(() => {
+        // Auth hasn't finished initialising yet — keep the loading spinner.
+        if (!authReady) return;
+
         let cancelled = false;
-        let unsubscribeAuth: (() => void) | null = null;
-        let shouldUnsubscribe = false;
+
+        if (!user) {
+            // Force a clean logout to clear out of sync SecureStore state and
+            // redirect to the login screen.
+            logoutUser();
+            return;
+        }
+
 
         const fetchActivity = async () => {
             try {
@@ -53,43 +78,12 @@ export default function HomeScreen() {
             }
         };
 
-        const handleUser = async (user: any) => {
-            if (cancelled) return;
-
-            if (user) {
-                // Auth confirmed — unsubscribe immediately so we only fetch once
-                if (unsubscribeAuth) {
-                    unsubscribeAuth();
-                    unsubscribeAuth = null;
-                } else {
-                    shouldUnsubscribe = true;
-                }
-                await fetchActivity();
-            } else {
-                // If auth resolves to null, stop loading to avoid hanging spinner
-                if (!cancelled) setActivityLoading(false);
-            }
-        };
-
-        if (auth.currentUser) {
-            // Fetch immediately if user is already present
-            fetchActivity();
-        } else {
-            // Otherwise subscribe to state change
-            unsubscribeAuth = onAuthStateChanged(auth, handleUser);
-            if (shouldUnsubscribe && unsubscribeAuth) {
-                unsubscribeAuth();
-                unsubscribeAuth = null;
-            }
-        }
+        fetchActivity();
 
         return () => {
             cancelled = true;
-            if (unsubscribeAuth) {
-                unsubscribeAuth();
-            }
         };
-    }, []);
+    }, [authReady, user]);
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -117,7 +111,7 @@ export default function HomeScreen() {
                         icon="plus-square"
                         title="Add Single Unit"
                         subtitle="Log a single item with full metadata."
-                        onPress={() => console.log("Add Unit pressed")}
+                        onPress={() => router.push("/units/add")}
                     />
                     <View style={{ height: 12 }} />
                     <ActionCard

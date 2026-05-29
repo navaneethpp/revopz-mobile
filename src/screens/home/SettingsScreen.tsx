@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View, TouchableOpacity, StatusBar, Switch, ScrollView } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, StatusBar, Switch, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import * as LocalAuthentication from "expo-local-authentication";
+
+import { Alert } from "@/context/AlertContext";
 import HeaderBar from "@/components/ui/HeaderBar";
 import { logoutUser } from "@/services/authService";
 import { getSession } from "@/utils/storage";

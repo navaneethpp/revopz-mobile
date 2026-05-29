@@ -8,7 +8,8 @@
 import { useEffect, useState } from "react";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import { Alert } from "@/context/AlertContext";
 
 import CustomInput from "@/components/ui/CustomInput";
 import LogoHeader from "@/components/ui/LogoHeader";

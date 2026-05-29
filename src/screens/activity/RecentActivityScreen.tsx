@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Modal,
     RefreshControl,
     ScrollView,
@@ -11,6 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { Alert } from "@/context/AlertContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";

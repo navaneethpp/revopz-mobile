@@ -12,9 +12,14 @@ import {
     onSnapshot,
     Unsubscribe,
     Timestamp,
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/config/firebase";
+import { getSession } from "@/utils/storage";
 import type { ActivityEntry, ManufacturedUnit } from "@/types/unit";
 
 const COLLECTION = "manufactured_units";
@@ -118,5 +123,60 @@ export function subscribeRecentUnits(
         authUnsub();
         if (innerUnsub) innerUnsub();
     };
+}
+
+export interface RegisterUnitData {
+    productName: string;
+    productNumber: string;
+    category: string;
+    requiresInspection: boolean;
+    warrantyMonths: number;
+}
+
+/**
+ * Creates a new manufactured unit document in the `manufactured_units` Firestore collection.
+ * Populates createdBy credentials using current auth user and session details.
+ */
+export async function registerUnit(data: RegisterUnitData): Promise<void> {
+    const session = await getSession();
+    if (!session) {
+        throw new Error("No active session found. Please log in again.");
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+        throw new Error("User not authenticated.");
+    }
+
+    // Check for duplicate serial number (SKU)
+    const docRef = doc(db, COLLECTION, data.productNumber);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        throw new Error(`A unit with serial number "${data.productNumber}" is already registered.`);
+    }
+
+    const status = data.requiresInspection ? "Quality Check" : "Ready";
+
+    const unitDoc = {
+        category: data.category,
+        createdAt: serverTimestamp(),
+        createdBy: session.email, // email that logged in
+        createdByName: session.name,
+        createdByRole: session.role,
+        fakeMarkedAt: null,
+        fakeMarkedBy: null,
+        fakeReason: "",
+        isFakeProduct: false,
+        manufacturedDate: new Date().toISOString().split("T")[0], // YYYY-MM-DD format
+        productName: data.productName,
+        productNameNormalized: data.productName.toLowerCase(),
+        productNumber: data.productNumber,
+        status: status,
+        updatedAt: serverTimestamp(),
+        warrantyMonths: data.warrantyMonths,
+        warrantyStatus: "not_registered",
+    };
+
+    await setDoc(docRef, unitDoc);
 }
 
