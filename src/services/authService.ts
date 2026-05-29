@@ -51,6 +51,12 @@ export async function loginUser(
             password,
         );
         uid = credential.user.uid;
+        console.log(
+            "[authService] Signed in user successfully. UID:",
+            uid,
+            "auth.currentUser:",
+            auth.currentUser?.uid ?? "null",
+        );
     } catch (err: any) {
         // Map Firebase error codes to friendly messages
         const code: string = err?.code ?? "";

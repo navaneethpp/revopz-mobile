@@ -33,6 +33,7 @@ export default function SplashScreen() {
 
             if (cancelled) return;
 
+            console.log("[SplashScreen] Checking isLoggedIn from SecureStore...");
             // 2. Check session while the logo is still visible (parallel work)
             const [loggedIn] = await Promise.all([
                 isLoggedIn(),
@@ -47,6 +48,13 @@ export default function SplashScreen() {
             ]);
 
             if (cancelled) return;
+
+            console.log(
+                "[SplashScreen] isLoggedIn result:",
+                loggedIn,
+                "Redirecting to:",
+                loggedIn ? "/home" : "/auth/login"
+            );
 
             // 3. Navigate — replace so the splash never appears in back-stack
             if (loggedIn) {

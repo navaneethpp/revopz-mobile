@@ -1,9 +1,9 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-// @ts-ignore — getReactNativePersistence exists at runtime in firebase v12 but its type
-// declaration is missing from the public types (known upstream issue).
-import { initializeAuth, getReactNativePersistence, getAuth } from "firebase/auth";
-import { createAsyncStorage } from "@react-native-async-storage/async-storage";
+// @ts-ignore — getReactNativePersistence is resolved from the RN bundle at runtime by Metro,
+// but type definitions default to web. We import it from firebase/auth with @ts-ignore.
+import { initializeAuth, getAuth, getReactNativePersistence } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -14,17 +14,59 @@ const firebaseConfig = {
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Diagnostics for AsyncStorage
+console.log("[FirebaseConfig] Checking AsyncStorage methods:", {
+    getItem: typeof AsyncStorage?.getItem,
+    setItem: typeof AsyncStorage?.setItem,
+    removeItem: typeof AsyncStorage?.removeItem,
+});
 
-// Initialize auth with AsyncStorage persistence so the session survives app restarts.
-// Guard against re-initialization during hot reloads (getApps check above ensures
-// only one Firebase app instance, but auth must also be initialized only once).
-const appStorage = createAsyncStorage("revopz-auth");
-export const auth = getApps().length > 1
+// Dump all AsyncStorage keys to see what is stored
+AsyncStorage.getAllKeys().then(async (keys) => {
+    console.log("[FirebaseConfig] AsyncStorage keys found:", keys);
+    for (const key of keys) {
+        try {
+            const val = await AsyncStorage.getItem(key);
+            console.log(`[FirebaseConfig] AsyncStorage key [${key}]:`, val?.substring(0, 100));
+        } catch (e) {
+            console.error(`[FirebaseConfig] Error reading key [${key}]:`, e);
+        }
+    }
+}).catch((err) => {
+    console.error("[FirebaseConfig] Error getting AsyncStorage keys:", err);
+});
+
+// ─── App ─────────────────────────────────────────────────────────────────────
+// Snapshot the app count BEFORE initializeApp so we can tell whether this is
+// a first-ever launch or a hot-reload re-evaluation of this module.
+const alreadyInitialized = getApps().length > 0;
+console.log("[FirebaseConfig] alreadyInitialized:", alreadyInitialized);
+const app = alreadyInitialized ? getApp() : initializeApp(firebaseConfig);
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+// `initializeAuth` must be called exactly once per Firebase app instance.
+// On hot reload, the module re-evaluates but the Firebase SDK keeps its
+// internal state alive, so calling initializeAuth again throws or silently
+// resets the persisted session.
+//
+// PREVIOUS BUG: the guard was `getApps().length > 1` — always false because
+// by the time auth runs, there is exactly 1 app registered.  This meant
+// initializeAuth ran on every hot reload, wiping the AsyncStorage-persisted
+// token and making auth.currentUser null after app reopen.
+//
+// FIX: Reuse the `alreadyInitialized` flag captured before the app was
+// created/retrieved. If the app already existed → auth was already initialized
+// → just retrieve it with getAuth(). Only call initializeAuth on true first run.
+//
+// We pass the default AsyncStorage export (the legacy singleton that satisfies
+// Firebase's ReactNativeAsyncStorage interface: { getItem, setItem, removeItem }).
+export const auth = alreadyInitialized
     ? getAuth(app)
     : initializeAuth(app, {
-        persistence: getReactNativePersistence(appStorage),
-    });
+          persistence: getReactNativePersistence(AsyncStorage),
+      });
+
+console.log("[FirebaseConfig] Auth initialized. currentUser:", auth.currentUser?.uid ?? "null");
 
 export const db = getFirestore(app);
 

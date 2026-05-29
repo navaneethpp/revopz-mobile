@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import * as LocalAuthentication from "expo-local-authentication";
+import { AuthProvider } from "@/context/AuthContext";
 
 export default function RootLayout() {
     const [isLocked, setIsLocked] = useState(false);
@@ -74,36 +75,38 @@ export default function RootLayout() {
     }, []);
 
     return (
-        <View style={{ flex: 1 }}>
-            <Stack screenOptions={{ headerShown: false }} />
+        <AuthProvider>
+            <View style={{ flex: 1 }}>
+                <Stack screenOptions={{ headerShown: false }} />
 
-            {/* Premium Lock Overlay */}
-            {isLocked && (
-                <View style={styles.lockOverlay}>
-                    <View style={styles.lockContainer}>
-                        {/* Lock Icon */}
-                        <View style={styles.iconCircle}>
-                            <Feather name="lock" size={32} color="#D97706" />
+                {/* Premium Lock Overlay */}
+                {isLocked && (
+                    <View style={styles.lockOverlay}>
+                        <View style={styles.lockContainer}>
+                            {/* Lock Icon */}
+                            <View style={styles.iconCircle}>
+                                <Feather name="lock" size={32} color="#D97706" />
+                            </View>
+
+                            <Text style={styles.lockTitle}>REVOPZ</Text>
+                            <Text style={styles.lockSubtitle}>
+                                App is locked. Verify your identity to continue.
+                            </Text>
+
+                            {/* Unlock Trigger Button */}
+                            <TouchableOpacity
+                                style={styles.unlockBtn}
+                                onPress={authenticate}
+                                activeOpacity={0.8}
+                            >
+                                <Feather name="shield" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                                <Text style={styles.unlockText}>Verify Identity</Text>
+                            </TouchableOpacity>
                         </View>
-                        
-                        <Text style={styles.lockTitle}>REVOPZ</Text>
-                        <Text style={styles.lockSubtitle}>
-                            App is locked. Verify your identity to continue.
-                        </Text>
-
-                        {/* Unlock Trigger Button */}
-                        <TouchableOpacity
-                            style={styles.unlockBtn}
-                            onPress={authenticate}
-                            activeOpacity={0.8}
-                        >
-                            <Feather name="shield" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-                            <Text style={styles.unlockText}>Verify Identity</Text>
-                        </TouchableOpacity>
                     </View>
-                </View>
-            )}
-        </View>
+                )}
+            </View>
+        </AuthProvider>
     );
 }
 
