@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -20,20 +21,13 @@ import LabeledDropdown, {
     type DropdownOption,
 } from "@/components/ui/LabeledDropdown";
 import InspectionToggleCard from "@/components/ui/InspectionToggleCard";
+import { fetchProducts } from "@/services/productService";
 import { COLORS } from "@/theme/colors";
 import { FONT_SIZE, FONT_WEIGHT } from "@/theme/typography";
 import { RADIUS } from "@/theme/radius";
 import { SPACING } from "@/theme/spacing";
 
 /* ─── Static option data ─────────────────────────────────────── */
-const PRODUCT_OPTIONS: DropdownOption[] = [
-    { label: "Hydraulic Pump Unit", value: "hydraulic-pump" },
-    { label: "Servo Motor Assembly", value: "servo-motor" },
-    { label: "Conveyor Belt Module", value: "conveyor-belt" },
-    { label: "Control Panel Board", value: "control-panel" },
-    { label: "Pressure Sensor Kit", value: "pressure-sensor" },
-];
-
 const CATEGORY_OPTIONS: DropdownOption[] = [
     { label: "Mechanical Components", value: "mechanical" },
     { label: "Electrical Components", value: "electrical" },
@@ -47,12 +41,35 @@ const CATEGORY_OPTIONS: DropdownOption[] = [
 export default function AddUnitScreen() {
     const [sku, setSku] = useState("");
     const [productName, setProductName] = useState<string | null>(null);
+    const [productOptions, setProductOptions] = useState<DropdownOption[]>([]);
+    const [productsLoading, setProductsLoading] = useState(true);
     const [category, setCategory] = useState<string | null>("mechanical");
     const [requiresInspection, setRequiresInspection] = useState(false);
 
+    // Fetch product options from Firestore on mount
+    useEffect(() => {
+        let active = true;
+        fetchProducts()
+            .then((options) => {
+                if (active) {
+                    setProductOptions(options);
+                    setProductsLoading(false);
+                }
+            })
+            .catch((err) => {
+                console.error("[AddUnitScreen] failed to load products:", err);
+                if (active) {
+                    setProductsLoading(false);
+                }
+            });
+        return () => {
+            active = false;
+        };
+    }, []);
+
     const handleBarcodeScan = () => {
         // Navigate to scanner screen — adjust route as needed
-        router.push("/scanner");
+        router.push("/scanner" as any);
     };
 
     const handleRegister = () => {
@@ -106,10 +123,10 @@ export default function AddUnitScreen() {
 
                         <LabeledDropdown
                             label="Product Name"
-                            options={PRODUCT_OPTIONS}
+                            options={productOptions}
                             value={productName}
                             onChange={(opt) => setProductName(opt.value)}
-                            placeholder="Select Product Name"
+                            placeholder={productsLoading ? "Loading products..." : "Select Product Name"}
                         />
 
                         <LabeledDropdown

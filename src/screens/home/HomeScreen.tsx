@@ -16,6 +16,7 @@ import ActionCard from "@/components/ui/ActionCard";
 import { getSession } from "@/utils/storage";
 import { fetchRecentActivity } from "@/services/activityService";
 import { useAuth } from "@/context/AuthContext";
+import { logoutUser } from "@/services/authService";
 import type { ActivityItem } from "@/services/activityService";
 
 export default function HomeScreen() {
@@ -56,8 +57,10 @@ export default function HomeScreen() {
 
         if (!user) {
             // Auth is resolved and there is definitively no logged-in user.
-            // Show the empty state so the screen doesn't hang forever.
-            setActivityLoading(false);
+            // Force a clean logout to clear out of sync SecureStore state and
+            // redirect to the login screen.
+            console.log("[HomeScreen] Firebase Auth resolved to null. Redirecting to login...");
+            logoutUser();
             return;
         }
 
