@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
     FlatList,
+    Keyboard,
     Modal,
     StyleSheet,
     Text,
@@ -47,7 +48,10 @@ export default function LabeledDropdown({
             <TouchableOpacity
                 style={styles.selector}
                 activeOpacity={0.75}
-                onPress={() => setOpen(true)}
+                onPress={() => {
+                    Keyboard.dismiss();
+                    setOpen(true);
+                }}
                 accessibilityLabel={`${label} dropdown`}
                 accessibilityRole="button"
             >
@@ -92,6 +96,7 @@ export default function LabeledDropdown({
                                 ]}
                                 activeOpacity={0.7}
                                 onPress={() => {
+                                    Keyboard.dismiss();
                                     onChange(item);
                                     setOpen(false);
                                 }}

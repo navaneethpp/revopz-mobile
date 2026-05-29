@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -68,6 +69,7 @@ export default function AddUnitScreen() {
     }, []);
 
     const handleProductChange = (val: string) => {
+        Keyboard.dismiss();
         setProductName(val);
         const matchedProduct = products.find((p) => p.name === val);
         if (matchedProduct) {
