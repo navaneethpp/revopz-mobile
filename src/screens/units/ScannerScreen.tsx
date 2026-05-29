@@ -64,9 +64,21 @@ export default function ScannerScreen() {
     const [permission, requestPermission] = useCameraPermissions();
     const [torchEnabled, setTorchEnabled] = useState(false);
 
+    const [warningMessage, setWarningMessage] = useState<string | null>(null);
+    const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     // Use synchronous refs to prevent React state race conditions during rapid camera scans
     const scannedRef = useRef<Set<string>>(new Set(parsedInitial));
     const isScanningLocked = useRef(false);
+
+    // Clean up warning timeouts on unmount
+    useEffect(() => {
+        return () => {
+            if (warningTimeoutRef.current) {
+                clearTimeout(warningTimeoutRef.current);
+            }
+        };
+    }, []);
 
     if (!isCameraModuleAvailable) {
         return (
@@ -162,6 +174,16 @@ export default function ScannerScreen() {
 
         // 2. Check if already scanned in current session (synchronous)
         if (scannedRef.current.has(barcodeData)) {
+            // Trigger a duplicate warning alert and display the bubble message temporarily
+            if (warningTimeoutRef.current) {
+                clearTimeout(warningTimeoutRef.current);
+            }
+            setWarningMessage(`Barcode already scanned: ${barcodeData}`);
+            warningTimeoutRef.current = setTimeout(() => {
+                setWarningMessage(null);
+            }, 2500);
+
+            triggerHaptic("warning");
             return; 
         }
 
@@ -255,6 +277,15 @@ export default function ScannerScreen() {
                     {/* Centered Align Text Overlay */}
                     <View style={styles.cameraOverlay}>
                         <Text style={styles.overlayText}>Align barcode within the frame</Text>
+
+                        {warningMessage && (
+                            <View style={styles.warningOverlay}>
+                                <Feather name="alert-triangle" size={16} color="#FFFFFF" />
+                                <Text style={styles.warningText} numberOfLines={2}>
+                                    {warningMessage}
+                                </Text>
+                            </View>
+                        )}
 
                         {/* Scanner Framing Overlay */}
                         <View style={styles.scannerFrame}>
@@ -611,5 +642,29 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "700",
+    },
+    warningOverlay: {
+        backgroundColor: "rgba(217, 119, 6, 0.95)", // Curated Amber theme color
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        position: "absolute",
+        top: 90,
+        maxWidth: "85%",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 6,
+        gap: 8,
+    },
+    warningText: {
+        color: "#FFFFFF",
+        fontSize: 13,
+        fontWeight: "600",
+        textAlign: "center",
+        flexShrink: 1,
     },
 });
