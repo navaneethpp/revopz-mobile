@@ -56,16 +56,12 @@ export default function HomeScreen() {
         let cancelled = false;
 
         if (!user) {
-            // Auth is resolved and there is definitively no logged-in user.
             // Force a clean logout to clear out of sync SecureStore state and
             // redirect to the login screen.
-            console.log("[HomeScreen] Firebase Auth resolved to null. Redirecting to login...");
             logoutUser();
             return;
         }
 
-        // Auth is ready and user is authenticated — safe to query Firestore.
-        console.log("[HomeScreen] Auth ready, fetching activity for UID:", user.uid);
 
         const fetchActivity = async () => {
             try {

@@ -112,7 +112,6 @@ export default function AddUnitScreen() {
                 { text: "OK", onPress: () => router.back() }
             ]);
         } catch (err: any) {
-            console.log("[AddUnitScreen] Registration failed:", err?.message || err);
             Alert.alert("Registration Failed", err?.message || "An unexpected error occurred.");
         } finally {
             setSubmitting(false);

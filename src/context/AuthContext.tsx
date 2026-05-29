@@ -66,22 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [authReady, setAuthReady] = useState(false);
 
     useEffect(() => {
-        console.log(
-            "[AuthContext] Mounting AuthProvider. Initial auth.currentUser:",
-            auth.currentUser?.uid ?? "null",
-        );
-
         // onAuthStateChanged always fires at least once with the resolved state.
         // The first emission IS the final state (Firebase SDK handles the
         // AsyncStorage read internally and calls the listener only once it has
         // a definitive answer).
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-            console.log(
-                "[AuthContext] onAuthStateChanged fired — user:",
-                firebaseUser?.uid ?? "null",
-                "| email:",
-                firebaseUser?.email ?? "null"
-            );
             setUser(firebaseUser);
             setAuthReady(true);
         });

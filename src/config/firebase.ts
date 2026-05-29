@@ -14,20 +14,11 @@ const firebaseConfig = {
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Diagnostics for AsyncStorage
-console.log("[FirebaseConfig] Checking AsyncStorage methods:", {
-    getItem: typeof AsyncStorage?.getItem,
-    setItem: typeof AsyncStorage?.setItem,
-    removeItem: typeof AsyncStorage?.removeItem,
-});
-
 // Dump all AsyncStorage keys to see what is stored
 AsyncStorage.getAllKeys().then(async (keys) => {
-    console.log("[FirebaseConfig] AsyncStorage keys found:", keys);
     for (const key of keys) {
         try {
             const val = await AsyncStorage.getItem(key);
-            console.log(`[FirebaseConfig] AsyncStorage key [${key}]:`, val?.substring(0, 100));
         } catch (e) {
             console.error(`[FirebaseConfig] Error reading key [${key}]:`, e);
         }
@@ -40,7 +31,6 @@ AsyncStorage.getAllKeys().then(async (keys) => {
 // Snapshot the app count BEFORE initializeApp so we can tell whether this is
 // a first-ever launch or a hot-reload re-evaluation of this module.
 const alreadyInitialized = getApps().length > 0;
-console.log("[FirebaseConfig] alreadyInitialized:", alreadyInitialized);
 const app = alreadyInitialized ? getApp() : initializeApp(firebaseConfig);
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -63,10 +53,8 @@ const app = alreadyInitialized ? getApp() : initializeApp(firebaseConfig);
 export const auth = alreadyInitialized
     ? getAuth(app)
     : initializeAuth(app, {
-          persistence: getReactNativePersistence(AsyncStorage),
-      });
-
-console.log("[FirebaseConfig] Auth initialized. currentUser:", auth.currentUser?.uid ?? "null");
+        persistence: getReactNativePersistence(AsyncStorage),
+    });
 
 export const db = getFirestore(app);
 
