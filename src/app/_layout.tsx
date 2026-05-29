@@ -73,9 +73,8 @@ import { enableNetwork, disableNetwork } from "firebase/firestore";
 export default function RootLayout() {
     const [isLocked, setIsLocked] = useState(false);
     const appState = useRef(AppState.currentState);
-    
-    const retryIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const retryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const clearRetryTimers = () => {
         if (retryIntervalRef.current) {
