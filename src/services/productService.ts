@@ -9,11 +9,17 @@ import type { DropdownOption } from "@/components/ui/LabeledDropdown";
 
 const COLLECTION = "products";
 
+export interface Product {
+    name: string;
+    category: string;
+    warrantyMonths: number;
+}
+
 /**
  * Fetch all products from Firestore, sorted alphabetically by name.
- * Maps the `name` field to label and value for dropdown options.
+ * Returns Product objects containing name, category, and warrantyMonths.
  */
-export async function fetchProducts(): Promise<DropdownOption[]> {
+export async function fetchProducts(): Promise<Product[]> {
     try {
         const q = query(
             collection(db, COLLECTION),
@@ -27,10 +33,10 @@ export async function fetchProducts(): Promise<DropdownOption[]> {
 
         return snapshot.docs.map((doc) => {
             const data = doc.data();
-            const name = data.name || "Unknown Product";
             return {
-                label: name,
-                value: name, // We set the value to the name as per requirements
+                name: data.name || "Unknown Product",
+                category: data.category || "",
+                warrantyMonths: typeof data.warrantyMonths === "number" ? data.warrantyMonths : 12,
             };
         });
     } catch (error) {

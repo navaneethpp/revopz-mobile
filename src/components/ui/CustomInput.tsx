@@ -31,9 +31,15 @@ export default function CustomInput({
                 </Text>
             ) : null}
 
-            <View style={styles.inputWrapper}>
+            <View style={[
+                styles.inputWrapper,
+                props.editable === false && styles.inputWrapperDisabled
+            ]}>
                 <TextInput
-                    style={styles.input}
+                    style={[
+                        styles.input,
+                        props.editable === false && styles.inputDisabled
+                    ]}
                     placeholderTextColor="#9CA3AF"
                     secureTextEntry={
                         secureTextEntry && !isPasswordVisible
@@ -91,10 +97,19 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 
+    inputWrapperDisabled: {
+        backgroundColor: "#F9FAFB",
+        borderColor: "#E5E7EB",
+    },
+
     input: {
         flex: 1,
         fontSize: 16,
         color: "#111827",
+    },
+
+    inputDisabled: {
+        color: "#6B7280",
     },
 
     errorText: {

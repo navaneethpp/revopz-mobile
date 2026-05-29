@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -17,41 +18,40 @@ import { router } from "expo-router";
 import PageHeader from "@/components/ui/PageHeader";
 import FormSectionCard from "@/components/ui/FormSectionCard";
 import SkuInput from "@/components/ui/SkuInput";
+import CustomInput from "@/components/ui/CustomInput";
 import LabeledDropdown, {
     type DropdownOption,
 } from "@/components/ui/LabeledDropdown";
 import InspectionToggleCard from "@/components/ui/InspectionToggleCard";
-import { fetchProducts } from "@/services/productService";
+import { fetchProducts, type Product } from "@/services/productService";
+import { registerUnit } from "@/services/unitService";
 import { COLORS } from "@/theme/colors";
 import { FONT_SIZE, FONT_WEIGHT } from "@/theme/typography";
 import { RADIUS } from "@/theme/radius";
 import { SPACING } from "@/theme/spacing";
 
-/* ─── Static option data ─────────────────────────────────────── */
-const CATEGORY_OPTIONS: DropdownOption[] = [
-    { label: "Mechanical Components", value: "mechanical" },
-    { label: "Electrical Components", value: "electrical" },
-    { label: "Pneumatic Systems", value: "pneumatic" },
-    { label: "Hydraulic Systems", value: "hydraulic" },
-    { label: "Control Systems", value: "control" },
-    { label: "Safety Equipment", value: "safety" },
-];
-
 /* ─── Screen ──────────────────────────────────────────────────── */
 export default function AddUnitScreen() {
     const [sku, setSku] = useState("");
     const [productName, setProductName] = useState<string | null>(null);
+    const [products, setProducts] = useState<Product[]>([]);
     const [productOptions, setProductOptions] = useState<DropdownOption[]>([]);
     const [productsLoading, setProductsLoading] = useState(true);
-    const [category, setCategory] = useState<string | null>("mechanical");
+    const [category, setCategory] = useState("");
     const [requiresInspection, setRequiresInspection] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     // Fetch product options from Firestore on mount
     useEffect(() => {
         let active = true;
         fetchProducts()
-            .then((options) => {
+            .then((fetchedProducts) => {
                 if (active) {
+                    setProducts(fetchedProducts);
+                    const options = fetchedProducts.map((p) => ({
+                        label: p.name,
+                        value: p.name,
+                    }));
                     setProductOptions(options);
                     setProductsLoading(false);
                 }
@@ -67,15 +67,54 @@ export default function AddUnitScreen() {
         };
     }, []);
 
+    const handleProductChange = (val: string) => {
+        setProductName(val);
+        const matchedProduct = products.find((p) => p.name === val);
+        if (matchedProduct) {
+            setCategory(matchedProduct.category || "");
+        } else {
+            setCategory("");
+        }
+    };
+
     const handleBarcodeScan = () => {
         // Navigate to scanner screen — adjust route as needed
         router.push("/scanner" as any);
     };
 
-    const handleRegister = () => {
-        // TODO: wire up Firestore submission
-        console.log({ sku, productName, category, requiresInspection });
-        router.back();
+    const handleRegister = async () => {
+        if (!sku.trim()) {
+            Alert.alert("Validation Error", "Please scan or enter a Product Serial Number (SKU).");
+            return;
+        }
+        if (!productName) {
+            Alert.alert("Validation Error", "Please select a Product Name.");
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            // Find the selected product to get its warranty duration
+            const selectedProduct = products.find((p) => p.name === productName);
+            const warrantyMonths = selectedProduct ? selectedProduct.warrantyMonths : 12;
+
+            await registerUnit({
+                productName,
+                productNumber: sku.trim(),
+                category: category,
+                requiresInspection: requiresInspection,
+                warrantyMonths: warrantyMonths,
+            });
+
+            Alert.alert("Success", "Product unit has been registered successfully.", [
+                { text: "OK", onPress: () => router.back() }
+            ]);
+        } catch (err: any) {
+            console.log("[AddUnitScreen] Registration failed:", err?.message || err);
+            Alert.alert("Registration Failed", err?.message || "An unexpected error occurred.");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleCancel = () => {
@@ -125,16 +164,15 @@ export default function AddUnitScreen() {
                             label="Product Name"
                             options={productOptions}
                             value={productName}
-                            onChange={(opt) => setProductName(opt.value)}
+                            onChange={(opt) => handleProductChange(opt.value)}
                             placeholder={productsLoading ? "Loading products..." : "Select Product Name"}
                         />
 
-                        <LabeledDropdown
+                        <CustomInput
                             label="Category"
-                            options={CATEGORY_OPTIONS}
                             value={category}
-                            onChange={(opt) => setCategory(opt.value)}
-                            placeholder="Select Category"
+                            editable={false}
+                            placeholder="Autofilled from product selection"
                         />
                     </FormSectionCard>
 
@@ -148,19 +186,29 @@ export default function AddUnitScreen() {
                 {/* ── Action buttons (pinned to bottom) ── */}
                 <View style={styles.footer}>
                     <TouchableOpacity
-                        style={styles.registerBtn}
+                        style={[
+                            styles.registerBtn,
+                            submitting && styles.registerBtnDisabled
+                        ]}
                         activeOpacity={0.85}
                         onPress={handleRegister}
+                        disabled={submitting}
                         accessibilityLabel="Register item"
                         accessibilityRole="button"
                     >
-                        <MaterialCommunityIcons
-                            name="database-plus-outline"
-                            size={20}
-                            color="#FFFFFF"
-                            style={styles.registerIcon}
-                        />
-                        <Text style={styles.registerText}>Register Item</Text>
+                        {submitting ? (
+                            <ActivityIndicator color="#FFFFFF" size="small" />
+                        ) : (
+                            <>
+                                <MaterialCommunityIcons
+                                    name="database-plus-outline"
+                                    size={20}
+                                    color="#FFFFFF"
+                                    style={styles.registerIcon}
+                                />
+                                <Text style={styles.registerText}>Register Item</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -233,6 +281,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 8,
         elevation: 5,
+    },
+    registerBtnDisabled: {
+        backgroundColor: "#94A3B8",
     },
     registerIcon: {
         marginRight: 8,

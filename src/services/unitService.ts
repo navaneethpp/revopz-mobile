@@ -12,9 +12,14 @@ import {
     onSnapshot,
     Unsubscribe,
     Timestamp,
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/config/firebase";
+import { getSession } from "@/utils/storage";
 import type { ActivityEntry, ManufacturedUnit } from "@/types/unit";
 
 const COLLECTION = "manufactured_units";
@@ -118,5 +123,58 @@ export function subscribeRecentUnits(
         authUnsub();
         if (innerUnsub) innerUnsub();
     };
+}
+
+export interface RegisterUnitData {
+    productName: string;
+    productNumber: string;
+    category: string;
+    requiresInspection: boolean;
+    warrantyMonths: number;
+}
+
+/**
+ * Creates a new manufactured unit document in the `manufactured_units` Firestore collection.
+ * Populates createdBy credentials using current auth user and session details.
+ */
+export async function registerUnit(data: RegisterUnitData): Promise<void> {
+    const session = await getSession();
+    if (!session) {
+        throw new Error("No active session found. Please log in again.");
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+        throw new Error("User not authenticated.");
+    }
+
+    // Check for duplicate serial number (SKU)
+    const docRef = doc(db, COLLECTION, data.productNumber);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        throw new Error(`A unit with serial number "${data.productNumber}" is already registered.`);
+    }
+
+    const status = data.requiresInspection ? "Quality Check" : "Ready";
+
+    const unitDoc = {
+        productName: data.productName,
+        productNumber: data.productNumber,
+        category: data.category,
+        status: status,
+        createdAt: serverTimestamp(),
+        createdBy: user.uid,
+        createdByName: session.name,
+        createdByRole: session.role,
+        warrantyMonths: data.warrantyMonths,
+        warrantyStatus: "not_registered",
+        manufacturedDate: new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        }),
+    };
+
+    await setDoc(docRef, unitDoc);
 }
 
