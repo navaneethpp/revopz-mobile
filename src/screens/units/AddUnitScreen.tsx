@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+import { scanEvents } from "@/utils/scanEvents";
 import { Alert } from "@/context/AlertContext";
 import PageHeader from "@/components/ui/PageHeader";
 import FormSectionCard from "@/components/ui/FormSectionCard";
@@ -80,8 +81,15 @@ export default function AddUnitScreen() {
     };
 
     const handleBarcodeScan = () => {
-        // Navigate to scanner screen — adjust route as needed
-        router.push("/scanner" as any);
+        scanEvents.setCallback((serials) => {
+            if (serials.length > 0) {
+                setSku(serials[0]);
+            }
+        });
+        router.push({
+            pathname: "/scanner",
+            params: { mode: "single" },
+        } as any);
     };
 
     const handleRegister = async () => {

@@ -30,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FFF",
           "image": "./assets/images/revopz-logo.png",
           "imageWidth": 200,
           "android": {
@@ -40,7 +40,15 @@
         }
       ],
       "expo-image",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Revopz to access your camera to scan barcodes and QR codes.",
+          "microphonePermission": "Allow Revopz to access your microphone.",
+          "barcodeScannerEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
