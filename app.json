@@ -30,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FFF",
           "image": "./assets/images/revopz-logo.png",
           "imageWidth": 200,
           "android": {
