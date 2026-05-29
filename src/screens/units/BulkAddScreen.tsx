@@ -9,23 +9,26 @@ import {
     StatusBar,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 
 import PageHeader from "@/components/ui/PageHeader";
+import ProductSelector from "@/components/ui/ProductSelector";
+import ScanBanner from "@/components/ui/ScanBanner";
+import ManualSerialAdd from "@/components/ui/ManualSerialAdd";
+import TotalQtyDisplay from "@/components/ui/TotalQtyDisplay";
+import ScannedUnitsList from "@/components/ui/ScannedUnitsList";
+
 import { Alert } from "@/context/AlertContext";
 import { fetchProducts, type Product } from "@/services/productService";
 import { registerUnitsBatch } from "@/services/unitService";
 import { db } from "@/config/firebase";
 import { COLORS } from "@/theme/colors";
-import { FONT_SIZE, FONT_WEIGHT } from "@/theme/typography";
-import { RADIUS } from "@/theme/radius";
 import { SPACING } from "@/theme/spacing";
 import { triggerHaptic } from "@/utils/haptics";
 
@@ -42,9 +45,10 @@ export default function BulkAddScreen() {
 
     const [serialInput, setSerialInput] = useState("");
     const [scannedList, setScannedList] = useState<ScannedUnit[]>([]);
-    
-    const totalQty = scannedList.length;
     const [submitting, setSubmitting] = useState(false);
+    const [addingManualSerial, setAddingManualSerial] = useState(false);
+
+    const totalQty = scannedList.length;
 
     // Fetch products on mount
     useEffect(() => {
@@ -75,12 +79,14 @@ export default function BulkAddScreen() {
 
     // Simulated Scan Handler
     const handleSimulateScan = () => {
+        if (submitting || addingManualSerial) return;
         dismissKeyboard();
         Alert.alert("Scan Serial Numbers", "This feature will be updated soon.");
     };
 
     // Manual Add Handler
     const handleManualAdd = async () => {
+        if (submitting || addingManualSerial) return;
         dismissKeyboard();
         const trimmedSerial = serialInput.trim();
         
@@ -94,11 +100,12 @@ export default function BulkAddScreen() {
         }
 
         // Check if already in local scanned list
-        if (scannedList.some((item) => item.serial === trimmedSerial)) {
+        if (scannedList.some((item) => item && item.serial === trimmedSerial)) {
             Alert.alert("Duplicate Item", `Serial number "${trimmedSerial}" is already in this batch list.`);
             return;
         }
 
+        setAddingManualSerial(true);
         try {
             // Check if already registered in the DB
             const docRef = doc(db, "manufactured_units", trimmedSerial);
@@ -122,17 +129,21 @@ export default function BulkAddScreen() {
         } catch (err: any) {
             console.error("[BulkAddScreen] Manual verification failed:", err);
             Alert.alert("Verification Failed", "Failed to verify the serial number with the database.");
+        } finally {
+            setAddingManualSerial(false);
         }
     };
 
     // Remove Scanned Item
     const handleRemoveItem = (serial: string) => {
+        if (submitting || addingManualSerial) return;
         triggerHaptic("light");
         setScannedList((prev) => prev.filter((item) => item && item.serial !== serial));
     };
 
     // Submit Batch Handler
     const handleSubmitBatch = async () => {
+        if (submitting || addingManualSerial) return;
         dismissKeyboard();
         if (!selectedProduct) {
             Alert.alert("Validation Error", "Please select a product.");
@@ -168,18 +179,21 @@ export default function BulkAddScreen() {
         }
     };
 
-
-
     return (
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
             <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
-            {/* Custom Header with Notifications and Avatar */}
+            {/* Header */}
             <PageHeader
                 title="Bulk Add"
-                showBackButton
+                showBackButton={!submitting && !addingManualSerial}
                 showSearch={false}
-                showAvatar
+                showAvatar={!submitting && !addingManualSerial}
+                onBackPress={() => {
+                    if (!submitting && !addingManualSerial) {
+                        router.back();
+                    }
+                }}
             />
 
             <KeyboardAvoidingView
@@ -191,135 +205,41 @@ export default function BulkAddScreen() {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* 1. Product Name Dropdown Card */}
-                    <View style={styles.card}>
-                        <Text style={styles.cardLabel}>PRODUCT NAME</Text>
-                        <TouchableOpacity
-                            style={styles.dropdownSelector}
-                            activeOpacity={0.75}
-                            onPress={() => {
-                                dismissKeyboard();
-                                setProductDropdownOpen(true);
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel="Select product name dropdown"
-                        >
-                            <View style={styles.dropdownLeft}>
-                                <MaterialCommunityIcons
-                                    name="package-variant-closed"
-                                    size={20}
-                                    color="#64748B"
-                                    style={{ marginRight: 10 }}
-                                />
-                                <Text style={styles.dropdownText} numberOfLines={1}>
-                                    {productsLoading
-                                        ? "Loading products..."
-                                        : selectedProduct
-                                        ? selectedProduct.name
-                                        : "Select Product Name"}
-                                </Text>
-                            </View>
-                            <Feather name="chevron-down" size={18} color="#64748B" />
-                        </TouchableOpacity>
-                    </View>
+                    {/* 1. Reusable Product Selector */}
+                    <ProductSelector
+                        value={selectedProduct ? selectedProduct.name : null}
+                        loading={productsLoading}
+                        disabled={submitting || addingManualSerial}
+                        onPress={() => {
+                            dismissKeyboard();
+                            setProductDropdownOpen(true);
+                        }}
+                    />
 
-                    {/* 2. Scan Serial Numbers Banner Button */}
-                    <TouchableOpacity
-                        style={[
-                            styles.scanBanner,
-                            submitting && styles.scanBannerDisabled,
-                        ]}
-                        activeOpacity={0.85}
+                    {/* 2. Reusable Scan Serial Numbers Banner */}
+                    <ScanBanner
                         onPress={handleSimulateScan}
-                        disabled={submitting}
-                        accessibilityRole="button"
-                        accessibilityLabel="Scan serial numbers banner"
-                    >
-                        <View style={styles.scanBannerLeft}>
-                            <Text style={styles.scanBrackets}>{"[ - ]"}</Text>
-                        </View>
-                        <Text style={styles.scanBannerText}>Scan Serial Numbers</Text>
-                        <View style={styles.scanBannerRight}>
-                            <MaterialCommunityIcons name="barcode-scan" size={28} color="#FFFFFF" />
-                        </View>
-                    </TouchableOpacity>
+                        disabled={submitting || addingManualSerial}
+                    />
 
-                    {/* 3. Manual Serial Number Entry Card */}
-                    <View style={styles.card}>
-                        <Text style={styles.cardLabel}>SERIAL NUMBER</Text>
-                        <View style={styles.manualEntryRow}>
-                            <View style={styles.manualInputWrapper}>
-                                <Feather name="grid" size={18} color="#94A3B8" style={{ marginRight: 10 }} />
-                                <TextInput
-                                    style={styles.manualInput}
-                                    placeholder="Enter serial number"
-                                    placeholderTextColor="#94A3B8"
-                                    value={serialInput}
-                                    onChangeText={setSerialInput}
-                                    autoCapitalize="characters"
-                                    autoCorrect={false}
-                                    onSubmitEditing={handleManualAdd}
-                                    returnKeyType="done"
-                                />
-                            </View>
-                            <TouchableOpacity
-                                style={styles.addButton}
-                                activeOpacity={0.8}
-                                onPress={handleManualAdd}
-                                accessibilityRole="button"
-                                accessibilityLabel="Add serial number"
-                            >
-                                <Feather name="plus" size={16} color="#FFFFFF" style={{ marginRight: 4 }} />
-                                <Text style={styles.addButtonText}>Add</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    {/* 3. Reusable Manual Entry Card */}
+                    <ManualSerialAdd
+                        value={serialInput}
+                        onChangeText={setSerialInput}
+                        onAdd={handleManualAdd}
+                        loading={addingManualSerial}
+                        disabled={submitting || addingManualSerial}
+                    />
 
-                    {/* 4. Total Qty Ingest Configuration Card */}
-                    <View style={styles.card}>
-                        <Text style={styles.cardLabel}>TOTAL QTY</Text>
-                        <View style={styles.qtyContainer}>
-                            <Text style={styles.qtyDisplayText}>
-                                {totalQty}
-                            </Text>
-                        </View>
-                    </View>
+                    {/* 4. Reusable Total Quantity Display */}
+                    <TotalQtyDisplay value={totalQty} />
 
-                    {/* 5. Scanned List Progress Card */}
-                    <View style={styles.card}>
-                        <View style={styles.scannedHeader}>
-                            <Text style={styles.scannedTitle}>Scanned Units</Text>
-                            <View style={styles.progressPill}>
-                                <Text style={styles.progressPillLabel}>MANUAL ENTRY</Text>
-                                <Text style={styles.progressPillValue}>
-                                    {scannedList.length}
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* Scanned Items Map */}
-                        <View style={styles.listContainer}>
-                            {scannedList && scannedList.map((item) => {
-                                if (!item || !item.serial) return null;
-                                return (
-                                    <View key={item.serial} style={styles.listItem}>
-                                        <View>
-                                            <Text style={styles.itemSerial}>{item.serial}</Text>
-                                            <Text style={styles.itemStatus}>{item.status}</Text>
-                                        </View>
-                                        <TouchableOpacity
-                                            onPress={() => handleRemoveItem(item.serial)}
-                                            style={styles.deleteBtn}
-                                            activeOpacity={0.7}
-                                            accessibilityLabel={`Remove serial ${item.serial}`}
-                                        >
-                                            <Feather name="trash-2" size={18} color="#DC2626" />
-                                        </TouchableOpacity>
-                                    </View>
-                                );
-                            })}
-                        </View>
-                    </View>
+                    {/* 5. Reusable Scanned list progress card */}
+                    <ScannedUnitsList
+                        items={scannedList}
+                        onRemove={handleRemoveItem}
+                        disabled={submitting || addingManualSerial}
+                    />
                 </ScrollView>
 
                 {/* Footer Action Buttons */}
@@ -327,11 +247,11 @@ export default function BulkAddScreen() {
                     <TouchableOpacity
                         style={[
                             styles.submitBtn,
-                            (submitting || scannedList.length === 0) && styles.submitBtnDisabled,
+                            (submitting || addingManualSerial || scannedList.length === 0) && styles.submitBtnDisabled,
                         ]}
                         activeOpacity={0.85}
                         onPress={handleSubmitBatch}
-                        disabled={submitting || scannedList.length === 0}
+                        disabled={submitting || addingManualSerial || scannedList.length === 0}
                         accessibilityRole="button"
                         accessibilityLabel="Submit batch registration"
                     >
@@ -346,7 +266,7 @@ export default function BulkAddScreen() {
                         style={styles.cancelBtn}
                         activeOpacity={0.7}
                         onPress={() => router.back()}
-                        disabled={submitting}
+                        disabled={submitting || addingManualSerial}
                         accessibilityRole="button"
                         accessibilityLabel="Cancel"
                     >
@@ -355,7 +275,7 @@ export default function BulkAddScreen() {
                 </View>
             </KeyboardAvoidingView>
 
-            {/* Product Picker Selection Modal (Bottom Sheet style) */}
+            {/* Product Selection Modal */}
             <Modal
                 visible={productDropdownOpen}
                 transparent
@@ -421,236 +341,6 @@ const styles = StyleSheet.create({
         paddingBottom: 24,
         gap: 16,
     },
-    row: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    /* Container Card Layouts */
-    card: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: "#E2E8F0",
-        padding: 16,
-    },
-    cardLabel: {
-        fontSize: 11,
-        fontWeight: FONT_WEIGHT.semibold as any,
-        color: "#64748B",
-        letterSpacing: 0.8,
-        textTransform: "uppercase",
-        marginBottom: 10,
-    },
-    /* 1. Product Dropdown Styles */
-    dropdownSelector: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        backgroundColor: "#FFFFFF",
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: "#E2E8F0",
-        paddingHorizontal: 14,
-        height: 50,
-    },
-    dropdownLeft: {
-        flexDirection: "row",
-        alignItems: "center",
-        flex: 1,
-    },
-    dropdownText: {
-        fontSize: 15,
-        color: COLORS.textPrimary,
-        fontWeight: FONT_WEIGHT.medium as any,
-        flex: 1,
-    },
-    /* 2. Scan Banner Button Styles */
-    scanBanner: {
-        height: 86,
-        backgroundColor: "#0B57D0", // Premium royal blue banner accent
-        borderRadius: 16,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 20,
-        ...Platform.select({
-            ios: {
-                shadowColor: "#0B57D0",
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.2,
-                shadowRadius: 10,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
-    },
-    scanBannerDisabled: {
-        opacity: 0.75,
-    },
-    scanBannerLeft: {
-        width: 32,
-        justifyContent: "center",
-    },
-    scanBrackets: {
-        color: "rgba(255, 255, 255, 0.4)",
-        fontSize: 12,
-        fontFamily: "System",
-        fontWeight: "700",
-    },
-    scanBannerText: {
-        fontSize: 17,
-        fontWeight: FONT_WEIGHT.bold as any,
-        color: "#FFFFFF",
-    },
-    scanBannerRight: {
-        width: 32,
-        alignItems: "flex-end",
-        justifyContent: "center",
-    },
-    /* 3. Manual Entry Input Box */
-    manualEntryRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    manualInputWrapper: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#FFFFFF",
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: "#E2E8F0",
-        paddingHorizontal: 12,
-        height: 48,
-    },
-    manualInput: {
-        flex: 1,
-        fontSize: 15,
-        color: COLORS.textPrimary,
-        height: "100%",
-    },
-    addButton: {
-        width: 92,
-        height: 48,
-        backgroundColor: "#059669", // Success Emerald Green
-        borderRadius: 10,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        marginLeft: 10,
-        ...Platform.select({
-            ios: {
-                shadowColor: "#059669",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.15,
-                shadowRadius: 6,
-            },
-            android: {
-                elevation: 2,
-            },
-        }),
-    },
-    addButtonText: {
-        color: "#FFFFFF",
-        fontSize: 15,
-        fontWeight: FONT_WEIGHT.bold as any,
-    },
-    /* 4. Total Quantity Config */
-    qtyContainer: {
-        height: 52,
-        backgroundColor: "#F8FAFC",
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: "#E2E8F0",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    qtyDisplayText: {
-        fontSize: 22,
-        fontWeight: FONT_WEIGHT.bold as any,
-        color: "#0B57D0",
-        textAlign: "center",
-    },
-    /* 5. Scanned Items List card */
-    scannedHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 16,
-    },
-    scannedTitle: {
-        fontSize: 16,
-        fontWeight: FONT_WEIGHT.bold as any,
-        color: COLORS.textPrimary,
-    },
-    progressPill: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#EFF6FF", // Light Blue tag
-        borderRadius: 20,
-        paddingVertical: 5,
-        paddingHorizontal: 12,
-    },
-    progressPillLabel: {
-        fontSize: 9,
-        fontWeight: "900",
-        color: "#1D4ED8",
-        letterSpacing: 0.6,
-        marginRight: 6,
-    },
-    progressPillValue: {
-        fontSize: 11,
-        fontWeight: FONT_WEIGHT.bold as any,
-        color: "#1D4ED8",
-    },
-    listContainer: {
-        width: "100%",
-    },
-    listItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: "#F1F5F9",
-    },
-    itemSerial: {
-        fontSize: 14,
-        fontWeight: FONT_WEIGHT.semibold as any,
-        color: "#1E293B",
-    },
-    itemStatus: {
-        fontSize: 10,
-        fontWeight: FONT_WEIGHT.bold as any,
-        color: "#059669",
-        marginTop: 3,
-        letterSpacing: 0.4,
-    },
-    deleteBtn: {
-        padding: 6,
-    },
-    progressHelper: {
-        fontSize: 13,
-        color: "#94A3B8",
-        fontStyle: "italic",
-        marginTop: 12,
-        marginBottom: 4,
-    },
-    progressBarContainer: {
-        height: 5,
-        backgroundColor: "#E2E8F0",
-        borderRadius: 3,
-        width: "100%",
-        marginTop: 12,
-        overflow: "hidden",
-    },
-    progressBarFill: {
-        height: "100%",
-        backgroundColor: "#0B57D0",
-        borderRadius: 3,
-    },
-    /* Action buttons footer (pinned to bottom) */
     footer: {
         paddingHorizontal: SPACING.screenPadding,
         paddingBottom: Platform.OS === "ios" ? 8 : 16,
@@ -686,7 +376,7 @@ const styles = StyleSheet.create({
     submitBtnText: {
         color: "#FFFFFF",
         fontSize: 16,
-        fontWeight: FONT_WEIGHT.bold as any,
+        fontWeight: "700",
     },
     cancelBtn: {
         height: SPACING.buttonHeight,
@@ -700,9 +390,8 @@ const styles = StyleSheet.create({
     cancelBtnText: {
         color: "#475569",
         fontSize: 16,
-        fontWeight: FONT_WEIGHT.semibold as any,
+        fontWeight: "600",
     },
-    /* Product Picker Modal Bottom Sheet Styles */
     modalBackdrop: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.4)",
@@ -729,7 +418,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 11,
-        fontWeight: FONT_WEIGHT.bold as any,
+        fontWeight: "700",
         color: "#64748B",
         letterSpacing: 0.8,
         textTransform: "uppercase",
@@ -743,9 +432,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: "#F1F5F9",
     },
-    modalOptionSelected: {
-        // no background change, just text coloring and checkmark
-    },
+    modalOptionSelected: {},
     modalOptionText: {
         fontSize: 16,
         color: COLORS.textPrimary,
@@ -753,6 +440,6 @@ const styles = StyleSheet.create({
     },
     modalOptionTextSelected: {
         color: COLORS.primary,
-        fontWeight: FONT_WEIGHT.semibold as any,
+        fontWeight: "600",
     },
 });
