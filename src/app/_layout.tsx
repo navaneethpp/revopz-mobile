@@ -67,6 +67,8 @@ try {
 
 import { AuthProvider } from "@/context/AuthContext";
 import { AlertProvider, GlobalAlertSetter, Alert } from "@/context/AlertContext";
+import { db } from "@/config/firebase";
+import { enableNetwork, disableNetwork } from "firebase/firestore";
 
 export default function RootLayout() {
     const [isLocked, setIsLocked] = useState(false);
@@ -150,9 +152,22 @@ export default function RootLayout() {
     };
 
     useEffect(() => {
+        const handleNetworkChange = (offline: boolean) => {
+            if (offline) {
+                disableNetwork(db)
+                    .then(() => console.log("[RootLayout] Firestore network paused (offline)."))
+                    .catch((err) => console.error("[RootLayout] Error pausing Firestore network:", err));
+            } else {
+                enableNetwork(db)
+                    .then(() => console.log("[RootLayout] Firestore network started/resumed (online)."))
+                    .catch((err) => console.error("[RootLayout] Error starting Firestore network:", err));
+            }
+        };
+
         // 1. One-time check on open (launch)
         NetInfo.fetch().then((state: any) => {
             const offline = state.isConnected === false || state.isInternetReachable === false;
+            handleNetworkChange(offline);
             if (offline) {
                 // Tiny timeout to let the GlobalAlertSetter register the context ref
                 setTimeout(() => {
@@ -164,6 +179,7 @@ export default function RootLayout() {
         // 2. Continuous network monitoring in the middle of app usage
         const unsubscribe = NetInfo.addEventListener((state: any) => {
             const offline = state.isConnected === false || state.isInternetReachable === false;
+            handleNetworkChange(offline);
             if (offline) {
                 showOfflineAlert();
             } else {
