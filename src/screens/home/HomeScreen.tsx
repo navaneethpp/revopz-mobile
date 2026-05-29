@@ -118,7 +118,7 @@ export default function HomeScreen() {
                         icon="copy"
                         title="Bulk Add Units"
                         subtitle="Rapidly ingest multiple items of the same type."
-                        onPress={() => console.log("Bulk Add pressed")}
+                        onPress={() => router.push("/units/bulk")}
                     />
                 </View>
             </ScrollView>

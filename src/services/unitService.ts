@@ -16,6 +16,7 @@ import {
     getDoc,
     setDoc,
     serverTimestamp,
+    writeBatch,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/config/firebase";
@@ -179,4 +180,80 @@ export async function registerUnit(data: RegisterUnitData): Promise<void> {
 
     await setDoc(docRef, unitDoc);
 }
+
+export interface RegisterUnitBatchData {
+    productName: string;
+    productNumbers: string[];
+    category: string;
+    warrantyMonths: number;
+}
+
+/**
+ * Registers multiple manufactured units inside a single atomic Firestore writeBatch transaction.
+ * Performs database duplicate checking for each serial number before executing the batch commit.
+ */
+export async function registerUnitsBatch(data: RegisterUnitBatchData): Promise<void> {
+    const session = await getSession();
+    if (!session) {
+        throw new Error("No active session found. Please log in again.");
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+        throw new Error("User not authenticated.");
+    }
+
+    if (!data.productNumbers || data.productNumbers.length === 0) {
+        throw new Error("No serial numbers provided to register.");
+    }
+
+    // 1. Perform parallel duplicate checks
+    const dupes: string[] = [];
+    await Promise.all(
+        data.productNumbers.map(async (num) => {
+            const docRef = doc(db, COLLECTION, num);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                dupes.push(num);
+            }
+        })
+    );
+
+    if (dupes.length > 0) {
+        throw new Error(
+            `The following serial numbers are already registered: ${dupes.join(", ")}`
+        );
+    }
+
+    // 2. Commit batch
+    const batch = writeBatch(db);
+    const mDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+    for (const num of data.productNumbers) {
+        const docRef = doc(db, COLLECTION, num);
+        const unitDoc = {
+            category: data.category,
+            createdAt: serverTimestamp(),
+            createdBy: session.email,
+            createdByName: session.name,
+            createdByRole: session.role,
+            fakeMarkedAt: null,
+            fakeMarkedBy: null,
+            fakeReason: "",
+            isFakeProduct: false,
+            manufacturedDate: mDate,
+            productName: data.productName,
+            productNameNormalized: data.productName.toLowerCase(),
+            productNumber: num,
+            status: "Ready",
+            updatedAt: serverTimestamp(),
+            warrantyMonths: data.warrantyMonths,
+            warrantyStatus: "not_registered",
+        };
+        batch.set(docRef, unitDoc);
+    }
+
+    await batch.commit();
+}
+
 
