@@ -264,12 +264,20 @@ export const globalAlert = {
             RNAlert.alert(title, message, buttons, options);
         }
     },
+    hide: () => {
+        if (globalAlertRef) {
+            globalAlertRef.hideAlert();
+        }
+    }
 };
 
 export const Alert = {
     alert: (title: string, message?: string, buttons?: AlertButton[], options?: AlertOptions) => {
         globalAlert.show(title, message, buttons, options);
     },
+    dismiss: () => {
+        globalAlert.hide();
+    }
 };
 
 // Hook provider component to capture the ref globally
