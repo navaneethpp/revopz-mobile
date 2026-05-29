@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -16,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+import { Alert } from "@/context/AlertContext";
 import PageHeader from "@/components/ui/PageHeader";
 import FormSectionCard from "@/components/ui/FormSectionCard";
 import SkuInput from "@/components/ui/SkuInput";
