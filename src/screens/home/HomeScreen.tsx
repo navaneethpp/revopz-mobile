@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { onAuthStateChanged } from "firebase/auth";
+import { router } from "expo-router";
 import HeaderBar from "@/components/ui/HeaderBar";
 import RecentActivityCard from "@/components/ui/RecentActivityCard";
 import ActionCard from "@/components/ui/ActionCard";
@@ -117,7 +118,7 @@ export default function HomeScreen() {
                         icon="plus-square"
                         title="Add Single Unit"
                         subtitle="Log a single item with full metadata."
-                        onPress={() => console.log("Add Unit pressed")}
+                        onPress={() => router.push("/units/add")}
                     />
                     <View style={{ height: 12 }} />
                     <ActionCard
