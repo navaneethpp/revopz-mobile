@@ -158,21 +158,23 @@ export async function registerUnit(data: RegisterUnitData): Promise<void> {
     const status = data.requiresInspection ? "Quality Check" : "Ready";
 
     const unitDoc = {
-        productName: data.productName,
-        productNumber: data.productNumber,
         category: data.category,
-        status: status,
         createdAt: serverTimestamp(),
-        createdBy: user.uid,
+        createdBy: session.email, // email that logged in
         createdByName: session.name,
         createdByRole: session.role,
+        fakeMarkedAt: null,
+        fakeMarkedBy: null,
+        fakeReason: "",
+        isFakeProduct: false,
+        manufacturedDate: new Date().toISOString().split("T")[0], // YYYY-MM-DD format
+        productName: data.productName,
+        productNameNormalized: data.productName.toLowerCase(),
+        productNumber: data.productNumber,
+        status: status,
+        updatedAt: serverTimestamp(),
         warrantyMonths: data.warrantyMonths,
         warrantyStatus: "not_registered",
-        manufacturedDate: new Date().toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        }),
     };
 
     await setDoc(docRef, unitDoc);
