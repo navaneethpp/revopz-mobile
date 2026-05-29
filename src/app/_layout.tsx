@@ -73,6 +73,20 @@ import { enableNetwork, disableNetwork } from "firebase/firestore";
 export default function RootLayout() {
     const [isLocked, setIsLocked] = useState(false);
     const appState = useRef(AppState.currentState);
+    
+    const retryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const clearRetryTimers = () => {
+        if (retryIntervalRef.current) {
+            clearInterval(retryIntervalRef.current);
+            retryIntervalRef.current = null;
+        }
+        if (retryTimeoutRef.current) {
+            clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = null;
+        }
+    };
 
     const authenticate = async () => {
         try {
@@ -116,15 +130,45 @@ export default function RootLayout() {
             [
                 {
                     text: "Retry",
-                    onPress: async () => {
+                    onPress: () => {
                         isOfflineAlertShowing.current = false;
-                        const state = await NetInfo.fetch();
-                        const offline = state.isConnected === false || state.isInternetReachable === false;
-                        if (offline) {
-                            showOfflineAlert();
-                        } else {
-                            Alert.dismiss();
-                        }
+                        Alert.dismiss();
+
+                        clearRetryTimers();
+
+                        // Show loader modal
+                        Alert.showLoading("Verifying network connection...");
+
+                        let isConnected = false;
+
+                        // Check network every 2 seconds
+                        retryIntervalRef.current = setInterval(async () => {
+                            try {
+                                const state = await NetInfo.fetch();
+                                const online = state.isConnected !== false && state.isInternetReachable !== false;
+                                if (online) {
+                                    isConnected = true;
+                                    clearRetryTimers();
+                                    Alert.hideLoading();
+                                    
+                                    // Start/Resume Firestore network connection
+                                    enableNetwork(db)
+                                        .then(() => console.log("[RootLayout] Firestore network started/resumed (online)."))
+                                        .catch((err) => console.error("[RootLayout] Error starting Firestore network:", err));
+                                }
+                            } catch (e) {
+                                console.error("[RootLayout] Error checking network status in retry:", e);
+                            }
+                        }, 2000);
+
+                        // Timeout after 1 minute (60 seconds)
+                        retryTimeoutRef.current = setTimeout(() => {
+                            clearRetryTimers();
+                            Alert.hideLoading();
+                            if (!isConnected) {
+                                showOfflineAlert();
+                            }
+                        }, 60000);
                     },
                 },
                 {
@@ -183,6 +227,8 @@ export default function RootLayout() {
             if (offline) {
                 showOfflineAlert();
             } else {
+                clearRetryTimers();
+                Alert.hideLoading();
                 if (isOfflineAlertShowing.current) {
                     isOfflineAlertShowing.current = false;
                     Alert.dismiss();
@@ -192,6 +238,7 @@ export default function RootLayout() {
 
         return () => {
             unsubscribe();
+            clearRetryTimers();
         };
     }, []);
 

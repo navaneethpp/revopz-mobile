@@ -8,6 +8,7 @@ import {
     Animated,
     TouchableWithoutFeedback,
     Platform,
+    ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { COLORS } from "@/theme/colors";
@@ -42,6 +43,8 @@ interface AlertContextProps {
         options?: AlertOptions
     ) => void;
     hideAlert: () => void;
+    showLoading: (message?: string) => void;
+    hideLoading: () => void;
 }
 
 const AlertContext = createContext<AlertContextProps | undefined>(undefined);
@@ -60,6 +63,25 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
         message: "",
         buttons: [],
     });
+
+    const [loading, setLoading] = useState({
+        visible: false,
+        message: "",
+    });
+
+    const showLoading = useCallback((message?: string) => {
+        setLoading({
+            visible: true,
+            message: message || "Loading...",
+        });
+    }, []);
+
+    const hideLoading = useCallback(() => {
+        setLoading({
+            visible: false,
+            message: "",
+        });
+    }, []);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -198,8 +220,27 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AlertContext.Provider value={{ showAlert, hideAlert }}>
+        <AlertContext.Provider value={{ showAlert, hideAlert, showLoading, hideLoading }}>
             {children}
+            
+            {/* Loading Modal */}
+            <Modal
+                transparent
+                visible={loading.visible}
+                animationType="fade"
+                onRequestClose={() => {}}
+            >
+                <View style={styles.loadingBackdrop}>
+                    <View style={styles.loadingBox}>
+                        <ActivityIndicator size="large" color={AMBER_COLORS.primary} style={{ marginBottom: 16 }} />
+                        {loading.message ? (
+                            <Text style={styles.loadingText}>{loading.message}</Text>
+                        ) : null}
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Alert Modal */}
             <Modal
                 transparent
                 visible={alert.visible}
@@ -268,6 +309,12 @@ export const globalAlert = {
         if (globalAlertRef) {
             globalAlertRef.hideAlert();
         }
+    },
+    showLoading: (message?: string) => {
+        globalAlertRef?.showLoading(message);
+    },
+    hideLoading: () => {
+        globalAlertRef?.hideLoading();
     }
 };
 
@@ -277,6 +324,12 @@ export const Alert = {
     },
     dismiss: () => {
         globalAlert.hide();
+    },
+    showLoading: (message?: string) => {
+        globalAlert.showLoading(message);
+    },
+    hideLoading: () => {
+        globalAlert.hideLoading();
     }
 };
 
@@ -406,6 +459,41 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         fontSize: 15,
         fontWeight: FONT_WEIGHT.bold as any,
+    },
+    loadingBackdrop: {
+        flex: 1,
+        backgroundColor: "rgba(15, 23, 42, 0.4)",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+    },
+    loadingBox: {
+        width: "100%",
+        maxWidth: 280,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: "#E2E8F0",
+        padding: 32,
+        alignItems: "center",
+        ...Platform.select({
+            ios: {
+                shadowColor: "#0F172A",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.12,
+                shadowRadius: 16,
+            },
+            android: {
+                elevation: 10,
+            },
+        }),
+    },
+    loadingText: {
+        fontSize: 15,
+        color: "#434655",
+        fontWeight: "600",
+        textAlign: "center",
+        lineHeight: 22,
     },
 });
 
