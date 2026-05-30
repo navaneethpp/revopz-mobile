@@ -102,7 +102,10 @@ export function subscribeRecentUnits(
                         productName: data.productName ?? "",
                         productNumber: data.productNumber ?? "",
                         category: data.category ?? "",
-                        createdAt: data.createdAt as Timestamp,
+                        // CR-01: guard against missing createdAt field (e.g. manually-inserted docs)
+                        createdAt: data.createdAt instanceof Timestamp
+                            ? data.createdAt
+                            : Timestamp.now(),
                         createdByName: data.createdByName ?? "",
                         status: data.status ?? "",
                         warrantyMonths: data.warrantyMonths ?? 0,
@@ -113,7 +116,6 @@ export function subscribeRecentUnits(
                 onUpdate(entries);
             },
             (err) => {
-                console.warn("[unitService] onSnapshot error:", err);
                 onError?.(err);
             },
         );
@@ -134,6 +136,18 @@ export interface RegisterUnitData {
     warrantyMonths: number;
 }
 
+// Helper to map Firestore error codes to friendly messages
+function handleFirestoreError(err: any, defaultMessage: string): never {
+    const code: string = err?.code ?? "";
+    if (code === "permission-denied") {
+        throw new Error("You do not have permission to register units.");
+    }
+    if (code === "unavailable") {
+        throw new Error("Network unavailable. Please check your connection and try again.");
+    }
+    throw new Error(defaultMessage);
+}
+
 /**
  * Creates a new manufactured unit document in the `manufactured_units` Firestore collection.
  * Populates createdBy credentials using current auth user and session details.
@@ -151,7 +165,13 @@ export async function registerUnit(data: RegisterUnitData): Promise<void> {
 
     // Check for duplicate serial number (SKU)
     const docRef = doc(db, COLLECTION, data.productNumber);
-    const docSnap = await getDoc(docRef);
+    let docSnap;
+    try {
+        docSnap = await getDoc(docRef);
+    } catch (err: any) {
+        handleFirestoreError(err, "Failed to verify unit. Please try again.");
+    }
+    
     if (docSnap.exists()) {
         throw new Error(`A unit with serial number "${data.productNumber}" is already registered.`);
     }
@@ -178,7 +198,11 @@ export async function registerUnit(data: RegisterUnitData): Promise<void> {
         warrantyStatus: "not_registered",
     };
 
-    await setDoc(docRef, unitDoc);
+    try {
+        await setDoc(docRef, unitDoc);
+    } catch (err: any) {
+        handleFirestoreError(err, "Failed to register unit. Please try again.");
+    }
 }
 
 export interface RegisterUnitBatchData {
@@ -209,15 +233,19 @@ export async function registerUnitsBatch(data: RegisterUnitBatchData): Promise<v
 
     // 1. Perform parallel duplicate checks
     const dupes: string[] = [];
-    await Promise.all(
-        data.productNumbers.map(async (num) => {
-            const docRef = doc(db, COLLECTION, num);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                dupes.push(num);
-            }
-        })
-    );
+    try {
+        await Promise.all(
+            data.productNumbers.map(async (num) => {
+                const docRef = doc(db, COLLECTION, num);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    dupes.push(num);
+                }
+            })
+        );
+    } catch (err: any) {
+        handleFirestoreError(err, "Failed to verify batch. Please try again.");
+    }
 
     if (dupes.length > 0) {
         throw new Error(
@@ -253,7 +281,11 @@ export async function registerUnitsBatch(data: RegisterUnitBatchData): Promise<v
         batch.set(docRef, unitDoc);
     }
 
-    await batch.commit();
+    try {
+        await batch.commit();
+    } catch (err: any) {
+        handleFirestoreError(err, "Failed to register batch. Please try again.");
+    }
 }
 
 

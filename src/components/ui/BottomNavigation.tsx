@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { useEffect, useRef, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -17,27 +18,23 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
     const pillOpacity = useRef(new Animated.Value(0)).current;
 
     // Animated values for tab icons scaling (micro-animations)
-    const homeScale = useRef(new Animated.Value(isHome ? 1.15 : 1)).current;
-    const profileScale = useRef(new Animated.Value(!isHome ? 1.15 : 1)).current;
+    const homeScale = useRef(new Animated.Value(isHome ? 1.1 : 1)).current;
+    const profileScale = useRef(new Animated.Value(!isHome ? 1.1 : 1)).current;
 
     const activeLayout = isHome ? layouts.home : layouts.profile;
 
     useEffect(() => {
         if (activeLayout) {
             Animated.parallel([
-                // Smooth spring animation for sliding pill
-                Animated.spring(pillX, {
+                // Smooth timing animation for sliding pill — no spring overshoot
+                Animated.timing(pillX, {
                     toValue: activeLayout.x,
-                    stiffness: 220,
-                    damping: 24,
-                    mass: 0.8,
+                    duration: 200,
                     useNativeDriver: false,
                 }),
-                Animated.spring(pillWidth, {
+                Animated.timing(pillWidth, {
                     toValue: activeLayout.width,
-                    stiffness: 220,
-                    damping: 24,
-                    mass: 0.8,
+                    duration: 200,
                     useNativeDriver: false,
                 }),
                 Animated.timing(pillOpacity, {
@@ -45,17 +42,15 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
                     duration: 150,
                     useNativeDriver: false,
                 }),
-                // Spring bounce for selected icon
-                Animated.spring(homeScale, {
-                    toValue: isHome ? 1.15 : 1.0,
-                    stiffness: 250,
-                    damping: 18,
+                // Subtle scale feedback for selected icon — no bounce
+                Animated.timing(homeScale, {
+                    toValue: isHome ? 1.1 : 1.0,
+                    duration: 150,
                     useNativeDriver: true,
                 }),
-                Animated.spring(profileScale, {
-                    toValue: !isHome ? 1.15 : 1.0,
-                    stiffness: 250,
-                    damping: 18,
+                Animated.timing(profileScale, {
+                    toValue: !isHome ? 1.1 : 1.0,
+                    duration: 150,
                     useNativeDriver: true,
                 }),
             ]).start();
@@ -95,7 +90,7 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
             {/* Dashboard tab */}
             <TouchableOpacity
                 onPress={() => handlePress("home")}
-                activeOpacity={0.8}
+                activeOpacity={1}
                 onLayout={(e) => {
                     const l = e.nativeEvent.layout;
                     setLayouts((prev) => ({ ...prev, home: l }));
@@ -109,13 +104,13 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
                     <Feather
                         name="grid"
                         size={20}
-                        color={isHome ? "#fff" : "#6B7280"}
+                        color={isHome ? COLORS.white : COLORS.gray500}
                     />
                 </Animated.View>
                 <Text
                     style={[
                         styles.tabLabel,
-                        { color: isHome ? "#fff" : "#6B7280" },
+                        { color: isHome ? COLORS.white : COLORS.gray500 },
                     ]}
                 >
                     Dashboard
@@ -125,7 +120,7 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
             {/* Settings tab */}
             <TouchableOpacity
                 onPress={() => handlePress("profile")}
-                activeOpacity={0.8}
+                activeOpacity={1}
                 onLayout={(e) => {
                     const l = e.nativeEvent.layout;
                     setLayouts((prev) => ({ ...prev, profile: l }));
@@ -139,13 +134,13 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
                     <Feather
                         name="settings"
                         size={20}
-                        color={!isHome ? "#fff" : "#6B7280"}
+                        color={!isHome ? COLORS.white : COLORS.gray500}
                     />
                 </Animated.View>
                 <Text
                     style={[
                         styles.tabLabel,
-                        { color: !isHome ? "#fff" : "#6B7280" },
+                        { color: !isHome ? COLORS.white : COLORS.gray500 },
                     ]}
                 >
                     Settings
@@ -168,7 +163,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-around",
         paddingHorizontal: 12,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.08,
         shadowRadius: 12,
@@ -193,7 +188,7 @@ const styles = StyleSheet.create({
     },
     pill: {
         position: "absolute",
-        backgroundColor: "#D97706", // Amber
+        backgroundColor: COLORS.warning, // Amber
         borderRadius: 16,
     },
     tabLabel: {

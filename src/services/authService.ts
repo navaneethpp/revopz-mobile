@@ -4,7 +4,7 @@
  * All Firebase Auth + Firestore interactions live here.
  * The rest of the app never imports from firebase directly — use these helpers.
  */
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import {
     collection,
     query,
@@ -61,6 +61,9 @@ export async function loginUser(
         ) {
             throw new Error("Invalid email or password.");
         }
+        if (code === "auth/invalid-email") {
+            throw new Error("Please enter a valid email address.");
+        }
         if (code === "auth/too-many-requests") {
             throw new Error(
                 "Too many failed attempts. Please try again later.",
@@ -71,7 +74,8 @@ export async function loginUser(
                 "Network error. Please check your connection.",
             );
         }
-        throw new Error(err?.message ?? "Authentication failed.");
+        // Never surface raw Firebase SDK messages to users (UX-01)
+        throw new Error("Login failed. Please try again or contact your administrator.");
     }
 
     // 2. Firestore lookup — query by email so the document structure is flexible
@@ -89,9 +93,13 @@ export async function loginUser(
             };
         }
     } catch (err: any) {
-        throw new Error(
-            "Could not verify your account. Please try again.",
-        );
+        // Always sign out if Firestore lookup fails — leaves no half-authed session (FB-01)
+        await signOut(auth).catch(() => null);
+        const code: string = err?.code ?? "";
+        if (code === "permission-denied") {
+            throw new Error("Account verification failed. Please contact your administrator.");
+        }
+        throw new Error("Could not verify your account. Please try again.");
     }
 
     if (!adminData) {
@@ -146,4 +154,48 @@ export async function logoutUser(): Promise<void> {
         clearSession(),
     ]);
     router.replace("/auth/login");
+}
+
+// -----------------------------------------------------------------------
+// resetPassword
+// -----------------------------------------------------------------------
+
+/**
+ * Re-authenticates the current Firebase user with their current password,
+ * then updates the password.
+ *
+ * @param currentPassword — The user's current password
+ * @param newPassword     — The new validated password
+ */
+export async function resetPassword(
+    currentPassword: string,
+    newPassword: string,
+): Promise<void> {
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+        throw new Error("No active session found. Please log in again.");
+    }
+
+    try {
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
+    } catch (err: any) {
+        // Map Firebase auth errors to friendly user-facing messages
+        const code: string = err?.code ?? "";
+        if (
+            code === "auth/wrong-password" ||
+            code === "auth/invalid-credential" ||
+            code === "auth/invalid-email"
+        ) {
+            throw new Error("Current password is incorrect.");
+        }
+        if (code === "auth/too-many-requests") {
+            throw new Error("Too many attempts. Please try again later.");
+        }
+        if (code === "auth/network-request-failed") {
+            throw new Error("Network error. Please check your connection.");
+        }
+        throw new Error(err?.message ?? "Could not reset password. Please try again.");
+    }
 }

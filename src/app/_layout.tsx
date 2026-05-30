@@ -1,80 +1,33 @@
 import { useEffect, useRef, useState } from "react";
-import { AppState, StyleSheet, Text, TouchableOpacity, View, BackHandler, Platform } from "react-native";
+import { AppState, StyleSheet, View, BackHandler, Platform } from "react-native";
 import { Stack } from "expo-router";
-import { Feather } from "@expo/vector-icons";
-import * as SecureStore from "expo-secure-store";
-import * as LocalAuthentication from "expo-local-authentication";
-const mockNetInfo = {
-    fetch: async () => {
-        try {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), 3000);
-            await fetch("https://clients3.google.com/generate_204", { 
-                method: "GET", 
-                signal: controller.signal 
-            });
-            clearTimeout(id);
-            return { isConnected: true, isInternetReachable: true };
-        } catch {
-            return { isConnected: false, isInternetReachable: false };
-        }
-    },
-    addEventListener: (callback: any) => {
-        let lastStateOffline: boolean | null = null;
-        
-        const checkConnection = async () => {
-            try {
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 3000);
-                await fetch("https://clients3.google.com/generate_204", { 
-                    method: "GET", 
-                    signal: controller.signal 
-                });
-                clearTimeout(id);
-                
-                if (lastStateOffline !== false) {
-                    lastStateOffline = false;
-                    callback({ isConnected: true, isInternetReachable: true });
-                }
-            } catch {
-                if (lastStateOffline !== true) {
-                    lastStateOffline = true;
-                    callback({ isConnected: false, isInternetReachable: false });
-                }
-            }
-        };
+import NetInfo from "@react-native-community/netinfo";
 
-        // Run check initially
-        checkConnection();
-
-        // Poll every 5 seconds
-        const interval = setInterval(checkConnection, 5000);
-
-        return () => {
-            clearInterval(interval);
-        };
-    },
-};
-
-let NetInfo: any = mockNetInfo;
-
-try {
-    const NetInfoModule = require("@react-native-community/netinfo");
-    NetInfo = NetInfoModule.default || NetInfoModule;
-} catch (e) {
-    console.log("[RootLayout] NetInfo native module is not available, using mock:", e);
-}
-
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { AlertProvider, GlobalAlertSetter, Alert } from "@/context/AlertContext";
 import { db } from "@/config/firebase";
 import { enableNetwork, disableNetwork } from "firebase/firestore";
+import { useAppLock } from "@/hooks/useAppLock";
+import UnlockScreen from "@/screens/security/UnlockScreen";
 
 export default function RootLayout() {
+    return (
+        <AuthProvider>
+            <AlertProvider>
+                <GlobalAlertSetter />
+                <AppContent />
+            </AlertProvider>
+        </AuthProvider>
+    );
+}
+
+function AppContent() {
+    const { user, authReady } = useAuth();
     const [isLocked, setIsLocked] = useState(false);
-    const appState = useRef(AppState.currentState);
+    
     const retryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isOfflineAlertShowing = useRef(false);
 
     const clearRetryTimers = () => {
         if (retryIntervalRef.current) {
@@ -86,38 +39,6 @@ export default function RootLayout() {
             retryTimeoutRef.current = null;
         }
     };
-
-    const authenticate = async () => {
-        try {
-            // Check if biometrics/passcode are supported and enrolled
-            const hasHardware = await LocalAuthentication.hasHardwareAsync();
-            const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-
-            if (!hasHardware || !isEnrolled) {
-                // If the device does not support or have biometrics set up,
-                // do not lock the user out, just bypass.
-                setIsLocked(false);
-                return;
-            }
-
-            const result = await LocalAuthentication.authenticateAsync({
-                promptMessage: "Unlock Revopz",
-                fallbackLabel: "Use PIN/Passcode",
-                disableDeviceFallback: false, // fallback to device PIN/Passcode
-            });
-
-            if (result.success) {
-                setIsLocked(false);
-            } else {
-                setIsLocked(true);
-            }
-        } catch (e) {
-            console.error("[RootLayout] Authentication error:", e);
-            setIsLocked(true);
-        }
-    };
-
-    const isOfflineAlertShowing = useRef(false);
 
     const showOfflineAlert = () => {
         if (isOfflineAlertShowing.current) return;
@@ -144,28 +65,49 @@ export default function RootLayout() {
                         retryIntervalRef.current = setInterval(async () => {
                             try {
                                 const state = await NetInfo.fetch();
-                                const online = state.isConnected !== false && state.isInternetReachable !== false;
+                                const online = state.isConnected === true && state.isInternetReachable === true;
                                 if (online) {
                                     isConnected = true;
                                     clearRetryTimers();
                                     Alert.hideLoading();
-                                    
+
                                     // Start/Resume Firestore network connection
-                                    enableNetwork(db)
-                                        .then(() => console.log("[RootLayout] Firestore network started/resumed (online)."))
-                                        .catch((err) => console.error("[RootLayout] Error starting Firestore network:", err));
+                                    enableNetwork(db).catch(() => {});
                                 }
-                            } catch (e) {
-                                console.error("[RootLayout] Error checking network status in retry:", e);
-                            }
+                            } catch { }
                         }, 2000);
 
-                        // Timeout after 1 minute (60 seconds)
+                        // Timeout after 1 minute (60 seconds) — NET-02: re-show alert
+                        // with an explanatory message so user knows why retry expired.
                         retryTimeoutRef.current = setTimeout(() => {
                             clearRetryTimers();
                             Alert.hideLoading();
                             if (!isConnected) {
-                                showOfflineAlert();
+                                isOfflineAlertShowing.current = false;
+                                Alert.alert(
+                                    "Connection Timed Out",
+                                    "Could not verify your connection within 60 seconds. Please check your network settings and try again.",
+                                    [
+                                        {
+                                            text: "Retry",
+                                            onPress: () => {
+                                                isOfflineAlertShowing.current = false;
+                                                showOfflineAlert();
+                                            },
+                                        },
+                                        {
+                                            text: "Exit",
+                                            style: "destructive",
+                                            onPress: () => {
+                                                isOfflineAlertShowing.current = false;
+                                                if (Platform.OS === "android") {
+                                                    BackHandler.exitApp();
+                                                }
+                                            },
+                                        },
+                                    ],
+                                    { cancelable: false }
+                                );
                             }
                         }, 60000);
                     },
@@ -184,7 +126,7 @@ export default function RootLayout() {
                             } catch {
                                 try {
                                     (globalThis as any).exit?.(0);
-                                } catch {}
+                                } catch { }
                             }
                         }
                     },
@@ -195,33 +137,21 @@ export default function RootLayout() {
     };
 
     useEffect(() => {
+        // NET-03: strict isInternetReachable check — null (captive portal) treated as offline
         const handleNetworkChange = (offline: boolean) => {
             if (offline) {
-                disableNetwork(db)
-                    .then(() => console.log("[RootLayout] Firestore network paused (offline)."))
-                    .catch((err) => console.error("[RootLayout] Error pausing Firestore network:", err));
+                disableNetwork(db).catch(() => {});
             } else {
-                enableNetwork(db)
-                    .then(() => console.log("[RootLayout] Firestore network started/resumed (online)."))
-                    .catch((err) => console.error("[RootLayout] Error starting Firestore network:", err));
+                enableNetwork(db).catch(() => {});
             }
         };
 
-        // 1. One-time check on open (launch)
-        NetInfo.fetch().then((state: any) => {
-            const offline = state.isConnected === false || state.isInternetReachable === false;
-            handleNetworkChange(offline);
-            if (offline) {
-                // Tiny timeout to let the GlobalAlertSetter register the context ref
-                setTimeout(() => {
-                    showOfflineAlert();
-                }, 500);
-            }
-        });
-
-        // 2. Continuous network monitoring in the middle of app usage
+        // NET-01: The splash screen already handles startup connectivity, so we
+        // only need addEventListener here for mid-session drops. Removing the
+        // one-time NetInfo.fetch() startup check prevents duplicate offline alerts.
         const unsubscribe = NetInfo.addEventListener((state: any) => {
-            const offline = state.isConnected === false || state.isInternetReachable === false;
+            // Treat isInternetReachable===null (captive portal) as offline (NET-03)
+            const offline = state.isConnected !== true || state.isInternetReachable !== true;
             handleNetworkChange(offline);
             if (offline) {
                 showOfflineAlert();
@@ -241,135 +171,33 @@ export default function RootLayout() {
         };
     }, []);
 
-    useEffect(() => {
-        // Initial lock check on launch
-        SecureStore.getItemAsync("biometric_enabled").then((enabled) => {
-            if (enabled === "true") {
-                setIsLocked(true);
-                // Tiny timeout to let the app finish mounting before prompting
-                setTimeout(() => {
-                    authenticate();
-                }, 400);
-            }
-        });
-
-        // AppState change listener for resume/background
-        const subscription = AppState.addEventListener("change", (nextAppState) => {
-            if (
-                appState.current.match(/inactive|background/) &&
-                nextAppState === "active"
-            ) {
-                // App is returning to foreground
-                SecureStore.getItemAsync("biometric_enabled").then((enabled) => {
-                    if (enabled === "true") {
-                        setIsLocked(true);
-                        authenticate();
-                    }
-                });
-            }
-            appState.current = nextAppState;
-        });
-
-        return () => {
-            subscription.remove();
-        };
-    }, []);
+    // Enforce lock verification transitions
+    useAppLock({
+        onLock: () => setIsLocked(true),
+        authReady,
+        isLoggedIn: !!user,
+    });
 
     return (
-        <AuthProvider>
-            <AlertProvider>
-                <GlobalAlertSetter />
-                <View style={{ flex: 1 }}>
-                    <Stack screenOptions={{ headerShown: false }} />
+        <View style={styles.container}>
+            <Stack screenOptions={{ headerShown: false }} />
 
-                    {/* Premium Lock Overlay */}
-                    {isLocked && (
-                        <View style={styles.lockOverlay}>
-                            <View style={styles.lockContainer}>
-                                {/* Lock Icon */}
-                                <View style={styles.iconCircle}>
-                                    <Feather name="lock" size={32} color="#D97706" />
-                                </View>
-
-                                <Text style={styles.lockTitle}>REVOPZ</Text>
-                                <Text style={styles.lockSubtitle}>
-                                    App is locked. Verify your identity to continue.
-                                </Text>
-
-                                {/* Unlock Trigger Button */}
-                                <TouchableOpacity
-                                    style={styles.unlockBtn}
-                                    onPress={authenticate}
-                                    activeOpacity={0.8}
-                                >
-                                    <Feather name="shield" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-                                    <Text style={styles.unlockText}>Verify Identity</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    )}
+            {/* Premium Full-Screen Unlock Overlay (Biometric / PIN keypad fallback) */}
+            {isLocked && (
+                <View style={styles.lockOverlay}>
+                    <UnlockScreen onUnlock={() => setIsLocked(false)} />
                 </View>
-            </AlertProvider>
-        </AuthProvider>
+            )}
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
     lockOverlay: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "#FFFFFF", // Fully opaque to protect app content
-        zIndex: 999999, // Ensure it sits on top of everything
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    lockContainer: {
-        alignItems: "center",
-        paddingHorizontal: 32,
-    },
-    iconCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: "#FEF3C7", // Light amber matching Revopz theme
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 24,
-    },
-    lockTitle: {
-        fontSize: 26,
-        fontWeight: "900",
-        color: "#D97706",
-        letterSpacing: 1.5,
-        marginBottom: 8,
-    },
-    lockSubtitle: {
-        fontSize: 15,
-        color: "#64748B",
-        textAlign: "center",
-        lineHeight: 22,
-        marginBottom: 36,
-    },
-    unlockBtn: {
-        backgroundColor: "#D97706",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 14,
-        paddingHorizontal: 28,
-        borderRadius: 12,
-        shadowColor: "#D97706",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    unlockText: {
-        color: "#FFFFFF",
-        fontSize: 16,
-        fontWeight: "700",
+        ...StyleSheet.absoluteFill,
+        zIndex: 999999, // Render on top of stack
     },
 });

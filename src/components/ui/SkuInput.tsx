@@ -28,7 +28,7 @@ export default function SkuInput({ onBarcodeScan, ...props }: SkuInputProps) {
                 <TextInput
                     style={styles.input}
                     placeholder="E.g. SN-8802-XP"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={COLORS.slate400}
                     autoCapitalize="characters"
                     returnKeyType="next"
                     accessibilityLabel="SKU or serial number input"
@@ -44,7 +44,7 @@ export default function SkuInput({ onBarcodeScan, ...props }: SkuInputProps) {
                     <MaterialCommunityIcons
                         name="barcode-scan"
                         size={24}
-                        color="#FFFFFF"
+                        color={COLORS.white}
                     />
                 </TouchableOpacity>
             </View>

@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React, { useState } from "react";
 import {
     TextInput,
@@ -40,7 +41,7 @@ export default function CustomInput({
                         styles.input,
                         props.editable === false && styles.inputDisabled
                     ]}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={COLORS.gray400}
                     secureTextEntry={
                         secureTextEntry && !isPasswordVisible
                     }
@@ -60,7 +61,7 @@ export default function CustomInput({
                                     : "eye-off-outline"
                             }
                             size={22}
-                            color="#6B7280"
+                            color={COLORS.gray500}
                         />
                     </TouchableOpacity>
                 )}
@@ -82,38 +83,38 @@ const styles = StyleSheet.create({
 
     label: {
         fontSize: 14,
-        color: "#6B7280",
+        color: COLORS.gray500,
         marginBottom: 8,
     },
 
     inputWrapper: {
         height: 56,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: COLORS.gray200,
         paddingHorizontal: 16,
         flexDirection: "row",
         alignItems: "center",
     },
 
     inputWrapperDisabled: {
-        backgroundColor: "#F9FAFB",
-        borderColor: "#E5E7EB",
+        backgroundColor: COLORS.gray50,
+        borderColor: COLORS.gray200,
     },
 
     input: {
         flex: 1,
         fontSize: 16,
-        color: "#111827",
+        color: COLORS.primary,
     },
 
     inputDisabled: {
-        color: "#6B7280",
+        color: COLORS.gray500,
     },
 
     errorText: {
-        color: "#EF4444",
+        color: COLORS.red500,
         fontSize: 12,
         marginTop: 6,
     },

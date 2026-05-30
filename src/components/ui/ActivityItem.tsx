@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: "#1565C0",
+        backgroundColor: COLORS.primary,
         marginTop: 6,
         flexShrink: 0,
     },
@@ -50,7 +51,7 @@ const styles = StyleSheet.create({
         top: 14,
         bottom: -14, // stops before the next dot to leave a small gap
         width: 1.5,
-        backgroundColor: "#CBD5E1",
+        backgroundColor: COLORS.slate300,
         left: 3.25, // center of the 8px wide column ((8 - 1.5) / 2)
     },
     textBlock: {
@@ -59,11 +60,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 15,
         fontWeight: "600",
-        color: "#111827",
+        color: COLORS.primary,
     },
     subtitle: {
         fontSize: 13,
-        color: "#6B7280",
+        color: COLORS.gray500,
         marginTop: 3,
         lineHeight: 18,
     },

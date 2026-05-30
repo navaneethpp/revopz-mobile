@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { Image, Text, View } from "react-native";
 
 type LogoHeaderProps = {
@@ -17,7 +18,7 @@ export default function LogoHeader({
             <Text style={{
                 fontSize: 20,
                 fontWeight: '700',
-                color: '#111827',
+                color: COLORS.primary,
                 marginTop: 12,
             }}>
                 {title}

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, disableNetwork } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 // @ts-ignore — getReactNativePersistence is resolved from the RN bundle at runtime by Metro,
 // but type definitions default to web. We import it from firebase/auth with @ts-ignore.
 import { initializeAuth, getAuth, getReactNativePersistence } from "firebase/auth";
@@ -14,18 +14,6 @@ const firebaseConfig = {
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Dump all AsyncStorage keys to see what is stored
-AsyncStorage.getAllKeys().then(async (keys) => {
-    for (const key of keys) {
-        try {
-            const val = await AsyncStorage.getItem(key);
-        } catch (e) {
-            console.error(`[FirebaseConfig] Error reading key [${key}]:`, e);
-        }
-    }
-}).catch((err) => {
-    console.error("[FirebaseConfig] Error getting AsyncStorage keys:", err);
-});
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 // Snapshot the app count BEFORE initializeApp so we can tell whether this is
@@ -57,10 +45,5 @@ export const auth = alreadyInitialized
     });
 
 export const db = getFirestore(app);
-
-// Disable network initially to prevent connection errors before internet connectivity is verified.
-disableNetwork(db).catch((err) => {
-    console.error("[FirebaseConfig] Error disabling network initially:", err);
-});
 
 export default app;

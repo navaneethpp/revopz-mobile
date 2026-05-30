@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { StyleSheet, Switch, Text, View } from "react-native";
 
 interface ToggleSwitchProps {
@@ -20,10 +21,10 @@ export default function ToggleSwitch({
             <Switch value={value}
                 onValueChange={onValueChange}
                 trackColor={{
-                    false: '#d1d5db',
-                    true: '#0f52cc',
+                    false: COLORS.gray300,
+                    true: COLORS.blueLink,
                 }}
-                thumbColor="#ffffff"
+                thumbColor={COLORS.white}
             />
         </View>
     )
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 15,
-        color: '#374151',
+        color: COLORS.gray700,
         fontWeight: '500',
     }
 })

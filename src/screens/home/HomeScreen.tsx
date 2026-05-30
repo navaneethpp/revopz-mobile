@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     ScrollView,
     StatusBar,
@@ -18,6 +18,7 @@ import { fetchRecentActivity } from "@/services/activityService";
 import { useAuth } from "@/context/AuthContext";
 import { logoutUser } from "@/services/authService";
 import type { ActivityItem } from "@/services/activityService";
+import { COLORS } from "@/theme/colors";
 
 export default function HomeScreen() {
     const { user, authReady } = useAuth();
@@ -26,6 +27,8 @@ export default function HomeScreen() {
     // Stay in loading state until auth is resolved AND the Firestore fetch finishes.
     // Initialise to true so we never flash "No recent activity yet" during startup.
     const [activityLoading, setActivityLoading] = useState(true);
+    // FB-04 / ES-01: distinguish "fetch failed" from "genuinely empty"
+    const [activityError, setActivityError] = useState(false);
 
     // Load the logged-in user's display name from SecureStore
     useEffect(() => {
@@ -33,6 +36,17 @@ export default function HomeScreen() {
             if (session?.name) setName(session.name);
         });
     }, []);
+
+    // LS-02: Safety timeout — if authReady never resolves (e.g. corrupted
+    // AsyncStorage token), force a clean logout after 10 seconds rather than
+    // showing an infinite spinner.
+    useEffect(() => {
+        if (authReady) return;
+        const timeout = setTimeout(() => {
+            logoutUser();
+        }, 10_000);
+        return () => clearTimeout(timeout);
+    }, [authReady]);
 
     // ─────────────────────────────────────────────────────────────────────────
     // Fetch recent activity — only after Firebase Auth has finished restoring
@@ -57,22 +71,23 @@ export default function HomeScreen() {
 
         if (!user) {
             // Force a clean logout to clear out of sync SecureStore state and
-            // redirect to the login screen.
-            logoutUser();
+            // redirect to the login screen. NAV-01: must be awaited so SecureStore
+            // is cleared before navigation fires.
+            (async () => {
+                await logoutUser();
+            })();
             return;
         }
 
 
         const fetchActivity = async () => {
+            setActivityError(false);
             try {
-                const items = await fetchRecentActivity(3);
+                const items = await fetchRecentActivity(5);
                 if (!cancelled) setActivityEntries(items);
-            } catch (err: any) {
-                console.error(
-                    "[HomeScreen] fetchRecentActivity failed:",
-                    err?.code,
-                    err?.message,
-                );
+            } catch {
+                // FB-04: mark error so UI can show a retry instead of the empty-state text
+                if (!cancelled) setActivityError(true);
             } finally {
                 if (!cancelled) setActivityLoading(false);
             }
@@ -87,7 +102,7 @@ export default function HomeScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
             {/* ── Top Navigation Bar ── */}
             <HeaderBar />
@@ -95,6 +110,8 @@ export default function HomeScreen() {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                bounces={false}
+                overScrollMode="never"
             >
                 {/* ── Welcome Heading ── */}
                 <Text style={styles.welcome}>Welcome back {name}</Text>
@@ -103,21 +120,23 @@ export default function HomeScreen() {
                 <RecentActivityCard
                     entries={activityEntries}
                     loading={activityLoading}
+                    error={activityError}
+                    onRetry={() => {
+                        setActivityLoading(true);
+                        setActivityError(false);
+                        fetchRecentActivity(5)
+                            .then(setActivityEntries)
+                            .catch(() => setActivityError(true))
+                            .finally(() => setActivityLoading(false));
+                    }}
                 />
 
                 {/* ── Action Cards (dashed container) ── */}
                 <View style={styles.dashedContainer}>
                     <ActionCard
                         icon="plus-square"
-                        title="Add Single Unit"
-                        subtitle="Log a single item with full metadata."
-                        onPress={() => router.push("/units/add")}
-                    />
-                    <View style={{ height: 12 }} />
-                    <ActionCard
-                        icon="copy"
-                        title="Bulk Add Units"
-                        subtitle="Rapidly ingest multiple items of the same type."
+                        title="Register Units"
+                        subtitle="Scan and register manufactured units to the database."
                         onPress={() => router.push("/units/bulk")}
                     />
                 </View>
@@ -129,7 +148,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: "#F8FAFC",
+        backgroundColor: COLORS.background,
     },
     scrollContent: {
         paddingHorizontal: 16,
@@ -138,7 +157,7 @@ const styles = StyleSheet.create({
     welcome: {
         fontSize: 26,
         fontWeight: "700",
-        color: "#111827",
+        color: COLORS.primary,
         marginTop: 4,
         marginBottom: 20,
     },
@@ -146,7 +165,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         borderWidth: 1.5,
         borderStyle: "dashed",
-        borderColor: "#CBD5E1",
+        borderColor: COLORS.slate300,
         borderRadius: 16,
         padding: 12,
     },

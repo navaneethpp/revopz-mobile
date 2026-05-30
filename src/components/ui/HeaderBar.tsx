@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
@@ -63,19 +64,19 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         paddingHorizontal: 20,
         paddingVertical: 12,
-        backgroundColor: "#F8FAFC",
+        backgroundColor: COLORS.background,
     },
     brand: {
         fontSize: 22,
         fontWeight: "800",
-        color: "#D97706",
+        color: COLORS.warning,
         letterSpacing: -0.5,
     },
     avatar: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: "#DBEAFE",
+        backgroundColor: COLORS.slate100,
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
@@ -85,10 +86,10 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     avatarInitialsContainer: {
-        backgroundColor: "#DBEAFE",
+        backgroundColor: COLORS.slate100,
     },
     avatarInitialsText: {
-        color: "#1E40AF",
+        color: COLORS.slate800,
         fontSize: 15,
         fontWeight: "700",
     },

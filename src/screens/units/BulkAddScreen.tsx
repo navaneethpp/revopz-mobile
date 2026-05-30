@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Keyboard,
@@ -28,9 +28,9 @@ import ScannedUnitsList from "@/components/ui/ScannedUnitsList";
 
 import { Alert } from "@/context/AlertContext";
 import { fetchProducts, type Product } from "@/services/productService";
+import { COLORS } from "@/theme/colors";
 import { registerUnitsBatch } from "@/services/unitService";
 import { db } from "@/config/firebase";
-import { COLORS } from "@/theme/colors";
 import { SPACING } from "@/theme/spacing";
 import { triggerHaptic } from "@/utils/haptics";
 
@@ -50,6 +50,14 @@ export default function BulkAddScreen() {
     const [submitting, setSubmitting] = useState(false);
     const [addingManualSerial, setAddingManualSerial] = useState(false);
 
+    // CR-02: mounted ref — prevents state updates on unmounted component
+    // when async verification resolves after the user has already navigated away.
+    const mountedRef = useRef(true);
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => { mountedRef.current = false; };
+    }, []);
+
     const totalQty = scannedList.length;
 
     // Fetch products on mount
@@ -65,8 +73,7 @@ export default function BulkAddScreen() {
                     }
                 }
             })
-            .catch((err) => {
-                console.error("[BulkAddScreen] Failed to load products:", err);
+            .catch(() => {
                 if (active) setProductsLoading(false);
             });
         return () => {
@@ -84,12 +91,15 @@ export default function BulkAddScreen() {
         if (serials.length === 0) return;
 
         // Filter out serials already in the local scannedList to avoid local duplicates
-        const uniqueNewSerials = serials.filter(
-            (s) => s && !scannedList.some((item) => item && item.serial === s)
-        );
+        // Also enforce minimum 3 character length for scanned barcodes
+        const uniqueNewSerials = serials
+            .map(s => s.trim())
+            .filter(
+                (s) => s.length >= 3 && !scannedList.some((item) => item && item.serial === s)
+            );
 
         if (uniqueNewSerials.length === 0) {
-            Alert.alert("No New Items", "All scanned barcodes are already present in your current batch list.");
+            Alert.alert("No Valid New Items", "All scanned barcodes are either too short (under 3 characters) or already present in your current batch list.");
             return;
         }
 
@@ -109,36 +119,45 @@ export default function BulkAddScreen() {
                         } else {
                             verifiedList.push({ serial, status: "VERIFIED SUCCESS" });
                         }
-                    } catch (err) {
-                        console.error(`[BulkAddScreen] Failed to verify serial ${serial}:`, err);
+                    } catch {
                         failedSerials.push(serial);
                     }
                 })
             );
+
+            // CR-02: guard against unmounted state updates
+            if (!mountedRef.current) return;
 
             // Add the verified ones to scannedList
             if (verifiedList.length > 0) {
                 setScannedList((prev) => [...prev, ...verifiedList]);
             }
 
+            // UX-02: truncate long serial lists to avoid unscrollable alerts
+            const formatList = (list: string[]) => {
+                const shown = list.slice(0, 5).join("\n");
+                return list.length > 5 ? `${shown}\n… and ${list.length - 5} more` : shown;
+            };
+
             // Report results
             if (duplicatesInDb.length > 0 || failedSerials.length > 0) {
                 let message = "";
                 if (duplicatesInDb.length > 0) {
-                    message += `The following serial numbers already exist in the database and were excluded:\n${duplicatesInDb.join("\n")}\n\n`;
+                    message += `The following serial numbers already exist in the database and were excluded:\n${formatList(duplicatesInDb)}\n\n`;
                 }
                 if (failedSerials.length > 0) {
-                    message += `Failed to verify the following serial numbers due to connection issues:\n${failedSerials.join("\n")}`;
+                    message += `Failed to verify the following serial numbers due to connection issues:\n${formatList(failedSerials)}`;
                 }
                 Alert.alert("Verification Results", message.trim());
             } else if (verifiedList.length > 0) {
                 triggerHaptic("success");
             }
-        } catch (err) {
-            console.error("[BulkAddScreen] Failed to verify scanned batch:", err);
+        } catch {
+            // CR-02: guard
+            if (!mountedRef.current) return;
             Alert.alert("Verification Error", "An error occurred while verifying the scanned serial numbers.");
         } finally {
-            setAddingManualSerial(false);
+            if (mountedRef.current) setAddingManualSerial(false);
         }
     };
 
@@ -168,13 +187,18 @@ export default function BulkAddScreen() {
         if (submitting || addingManualSerial) return;
         dismissKeyboard();
         const trimmedSerial = serialInput.trim();
-        
+
         if (!selectedProduct) {
             Alert.alert("Selection Required", "Please select a Product Name first.");
             return;
         }
         if (!trimmedSerial) {
             Alert.alert("Validation Error", "Please enter a valid serial number.");
+            return;
+        }
+        // FV-05: minimum serial length guard
+        if (trimmedSerial.length < 3) {
+            Alert.alert("Validation Error", "Serial number must be at least 3 characters.");
             return;
         }
 
@@ -200,16 +224,17 @@ export default function BulkAddScreen() {
 
             // Success adding
             triggerHaptic("success");
+            // CR-02: guard
+            if (!mountedRef.current) return;
             setScannedList((prev) => [
                 ...prev,
                 { serial: trimmedSerial, status: "VERIFIED SUCCESS" },
             ]);
             setSerialInput("");
-        } catch (err: any) {
-            console.error("[BulkAddScreen] Manual verification failed:", err);
+        } catch {
             Alert.alert("Verification Failed", "Failed to verify the serial number with the database.");
         } finally {
-            setAddingManualSerial(false);
+            if (mountedRef.current) setAddingManualSerial(false);
         }
     };
 
@@ -228,6 +253,11 @@ export default function BulkAddScreen() {
             Alert.alert("Validation Error", "Please select a product.");
             return;
         }
+        // FV-03: category guard — check if the product category is missing
+        if (!selectedProduct.category || !selectedProduct.category.trim()) {
+            Alert.alert("Validation Error", "Selected product is missing a category. Please contact your administrator.");
+            return;
+        }
         if (scannedList.length === 0) {
             Alert.alert("Validation Error", "Please scan or add at least one serial number.");
             return;
@@ -238,7 +268,7 @@ export default function BulkAddScreen() {
             const productNumbers = scannedList
                 .filter((item) => item && item.serial)
                 .map((item) => item.serial);
-            
+
             await registerUnitsBatch({
                 productName: selectedProduct.name,
                 productNumbers,
@@ -251,7 +281,6 @@ export default function BulkAddScreen() {
                 { text: "OK", onPress: () => router.back() },
             ]);
         } catch (err: any) {
-            console.log("[BulkAddScreen] Batch registration failed:", err?.message || err);
             Alert.alert("Submission Failed", err?.message || "An unexpected error occurred during batch registration.");
         } finally {
             setSubmitting(false);
@@ -264,7 +293,7 @@ export default function BulkAddScreen() {
 
             {/* Header */}
             <PageHeader
-                title="Bulk Add"
+                title="Register Unit"
                 showBackButton={!submitting && !addingManualSerial}
                 showSearch={false}
                 showAvatar={!submitting && !addingManualSerial}
@@ -283,6 +312,8 @@ export default function BulkAddScreen() {
                     contentContainerStyle={styles.scroll}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
+                    bounces={false}
+                    overScrollMode="never"
                 >
                     {/* 1. Reusable Product Selector */}
                     <ProductSelector
@@ -335,7 +366,7 @@ export default function BulkAddScreen() {
                         accessibilityLabel="Submit batch registration"
                     >
                         {submitting ? (
-                            <ActivityIndicator color="#FFFFFF" size="small" />
+                            <ActivityIndicator color={COLORS.white} size="small" />
                         ) : (
                             <Text style={styles.submitBtnText}>Submit Batch</Text>
                         )}
@@ -372,6 +403,8 @@ export default function BulkAddScreen() {
                     <ScrollView
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 24 }}
+                        bounces={false}
+                        overScrollMode="never"
                     >
                         {products.map((item) => (
                             <TouchableOpacity
@@ -431,13 +464,13 @@ const styles = StyleSheet.create({
     },
     submitBtn: {
         height: SPACING.buttonHeight,
-        backgroundColor: "#0B57D0",
+        backgroundColor: COLORS.blueAccent,
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
         ...Platform.select({
             ios: {
-                shadowColor: "#0B57D0",
+                shadowColor: COLORS.blueAccent,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,
                 shadowRadius: 8,
@@ -448,26 +481,26 @@ const styles = StyleSheet.create({
         }),
     },
     submitBtnDisabled: {
-        backgroundColor: "#94A3B8",
+        backgroundColor: COLORS.slate400,
         shadowOpacity: 0,
         elevation: 0,
     },
     submitBtnText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: "700",
     },
     cancelBtn: {
         height: SPACING.buttonHeight,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         alignItems: "center",
         justifyContent: "center",
     },
     cancelBtnText: {
-        color: "#475569",
+        color: COLORS.slate600,
         fontSize: 16,
         fontWeight: "600",
     },
@@ -480,7 +513,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         paddingTop: 12,
@@ -491,14 +524,14 @@ const styles = StyleSheet.create({
         width: 40,
         height: 4,
         borderRadius: 2,
-        backgroundColor: "#CBD5E1",
+        backgroundColor: COLORS.slate300,
         alignSelf: "center",
         marginBottom: 16,
     },
     modalTitle: {
         fontSize: 11,
         fontWeight: "700",
-        color: "#64748B",
+        color: COLORS.textMuted,
         letterSpacing: 0.8,
         textTransform: "uppercase",
         marginBottom: 16,
@@ -509,7 +542,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         paddingVertical: 14,
         borderBottomWidth: 1,
-        borderBottomColor: "#F1F5F9",
+        borderBottomColor: COLORS.slate100,
     },
     modalOptionSelected: {},
     modalOptionText: {

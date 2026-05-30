@@ -40,7 +40,6 @@ export async function fetchProducts(): Promise<Product[]> {
             };
         });
     } catch (error) {
-        console.error("[productService] fetchProducts failed:", error);
         throw error;
     }
 }

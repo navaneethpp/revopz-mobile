@@ -10,6 +10,10 @@ import { useEffect, useRef } from "react";
 import { Animated, Dimensions, Image, StyleSheet, View } from "react-native";
 
 import { isLoggedIn } from "@/utils/storage";
+import { checkInternetAndSyncFirestore } from "@/utils/checkInternetAndSyncFirestore";
+import { isPinSet } from "@/utils/pinStorage";
+
+import { COLORS } from "@/theme/colors";
 
 const { width } = Dimensions.get("window");
 const LOGO_SIZE = width * 0.32;
@@ -48,15 +52,33 @@ export default function SplashScreen() {
 
             if (cancelled) return;
 
-            // 3. Navigate — replace so the splash never appears in back-stack
+            // 3. Verify internet connectivity and enable Firestore network.
+            //    This blocks until the device is online (showing a Retry/Exit
+            //    alert when offline), so navigation only happens when Firestore
+            //    is ready to serve live queries.
+            await checkInternetAndSyncFirestore();
+
+            if (cancelled) return;
+
+            // 4. Navigate — replace so the splash never appears in back-stack
             if (loggedIn) {
-                router.replace("/home");
+                const hasPin = await isPinSet();
+                if (hasPin) {
+                    router.replace("/home");
+                } else {
+                    router.replace("/security/create-pin");
+                }
             } else {
                 router.replace("/auth/login");
             }
         };
 
-        run();
+        // NAV-02: catch any unexpected error (e.g. SecureStore unavailable on
+        // encrypted/locked device) and default to the login screen so the user
+        // is never stranded on a blank splash.
+        run().catch(() => {
+            if (!cancelled) router.replace("/auth/login");
+        });
 
         return () => {
             cancelled = true;
@@ -79,7 +101,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#ffffff",
+        backgroundColor: COLORS.white,
         alignItems: "center",
         justifyContent: "center",
     },

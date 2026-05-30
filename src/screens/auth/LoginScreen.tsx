@@ -17,6 +17,7 @@ import PrimaryButton from "@/components/ui/PrimaryInput";
 import ScreenContainer from "@/components/ui/ScreenContainer";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import { loginUser } from "@/services/authService";
+import { COLORS } from "@/theme/colors";
 
 // -----------------------------------------------------------------------
 // Validation helpers
@@ -71,15 +72,43 @@ export default function LoginScreen() {
         });
     }, []);
 
-    // Clear a specific field error as the user types
+    // Clear email error only when the input becomes valid to prevent layout flashing
     const handleEmailChange = (value: string) => {
         setEmail(value);
-        if (errors.email) setErrors((e) => ({ ...e, email: "" }));
+        if (errors.email) {
+            if (value.trim() && EMAIL_REGEX.test(value.trim())) {
+                setErrors((e) => ({ ...e, email: "" }));
+            }
+        }
     };
 
+    // FV-02: re-validate on blur so the user gets real-time feedback
+    // when they leave a field rather than only on submit.
+    const handleEmailBlur = () => {
+        if (!email.trim()) {
+            setErrors((e) => ({ ...e, email: "Email is required." }));
+        } else if (!EMAIL_REGEX.test(email.trim())) {
+            setErrors((e) => ({ ...e, email: "Please enter a valid email address." }));
+        }
+    };
+
+    // Clear password error only when it meets minimum length to prevent layout flashing
     const handlePasswordChange = (value: string) => {
         setPassword(value);
-        if (errors.password) setErrors((e) => ({ ...e, password: "" }));
+        if (errors.password) {
+            if (value && value.length >= 6) {
+                setErrors((e) => ({ ...e, password: "" }));
+            }
+        }
+    };
+
+    // FV-02: re-validate password on blur
+    const handlePasswordBlur = () => {
+        if (!password) {
+            setErrors((e) => ({ ...e, password: "Password is required." }));
+        } else if (password.length < 6) {
+            setErrors((e) => ({ ...e, password: "Password must be at least 6 characters." }));
+        }
     };
 
     const handleLogin = async () => {
@@ -95,10 +124,12 @@ export default function LoginScreen() {
         // 2. Attempt login
         setLoading(true);
         try {
-            // Save biometric access preference before navigating/completing login
-            await SecureStore.setItemAsync("biometric_enabled", biometricEnabled ? "true" : "false");
             // loginUser handles navigation internally on success
             await loginUser(email, password);
+            // SS-01: write biometric preference ONLY after login succeeds,
+            // so a failed login attempt on a shared device doesn't persist
+            // the wrong user's biometric preference.
+            await SecureStore.setItemAsync("biometric_enabled", biometricEnabled ? "true" : "false");
         } catch (err: any) {
             // Show error as an Alert (keeps the screen clean for retry)
             Alert.alert(
@@ -120,6 +151,7 @@ export default function LoginScreen() {
                 placeholder="Enter your email"
                 value={email}
                 onChangeText={handleEmailChange}
+                onBlur={handleEmailBlur}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -133,6 +165,7 @@ export default function LoginScreen() {
                 placeholder="Enter your password"
                 value={password}
                 onChangeText={handlePasswordChange}
+                onBlur={handlePasswordBlur}
                 secureTextEntry
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
@@ -146,11 +179,18 @@ export default function LoginScreen() {
                     marginTop: -6,
                     marginBottom: 12,
                 }}
-                disabled={loading}
+                activeOpacity={0.7}
+                onPress={() => {
+                    Alert.alert(
+                        "Reset Password",
+                        "Please contact an administrator with the Manage role to reset your password.",
+                        [{ text: "OK" }]
+                    );
+                }}
             >
                 <Text
                     style={{
-                        color: "#0f52cc",
+                        color: COLORS.blueLink,
                         fontSize: 14,
                         fontWeight: "500",
                     }}
