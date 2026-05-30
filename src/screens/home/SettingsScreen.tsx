@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, StatusBar, Switch, ScrollView } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, StatusBar, Switch, ScrollView, Modal, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -9,9 +9,11 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { COLORS } from "@/theme/colors";
 import { Alert } from "@/context/AlertContext";
 import HeaderBar from "@/components/ui/HeaderBar";
-import { logoutUser } from "@/services/authService";
+import { logoutUser, resetPassword } from "@/services/authService";
 import { getSession } from "@/utils/storage";
 import { triggerHaptic, updateHapticsCache } from "@/utils/haptics";
+import CustomInput from "@/components/ui/CustomInput";
+import { checkPasswordRequirements, isPasswordValid } from "@/utils/passwordValidator";
 import {
     getAppLockEnabled,
     setAppLockEnabled,
@@ -31,6 +33,93 @@ export default function SettingsScreen() {
     const [appLockEnabled, setAppLockEnabledState] = useState(false);
     const [resumeTimeout, setResumeTimeoutState] = useState(30);
     const [hasPin, setHasPinState] = useState(false);
+
+    // Reset password states
+    const [resetModalVisible, setResetModalVisible] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [resetLoading, setResetLoading] = useState(false);
+    const [resetErrors, setResetErrors] = useState({ current: "", newPassword: "", confirm: "" });
+
+    const closeResetModal = () => {
+        setResetModalVisible(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setResetLoading(false);
+        setResetErrors({ current: "", newPassword: "", confirm: "" });
+    };
+
+    const handleResetPassword = async () => {
+        const newErrors = { current: "", newPassword: "", confirm: "" };
+        let hasError = false;
+
+        if (!currentPassword) {
+            newErrors.current = "Current password is required.";
+            hasError = true;
+        }
+
+        const reqs = checkPasswordRequirements(newPassword);
+        if (!newPassword) {
+            newErrors.newPassword = "New password is required.";
+            hasError = true;
+        } else if (!isPasswordValid(reqs)) {
+            newErrors.newPassword = "New password does not meet requirements.";
+            hasError = true;
+        }
+
+        if (!confirmPassword) {
+            newErrors.confirm = "Confirm password is required.";
+            hasError = true;
+        } else if (newPassword !== confirmPassword) {
+            newErrors.confirm = "Passwords do not match.";
+            hasError = true;
+        }
+
+        if (hasError) {
+            setResetErrors(newErrors);
+            triggerHaptic("error");
+            return;
+        }
+
+        setResetLoading(true);
+        try {
+            await resetPassword(currentPassword, newPassword);
+            closeResetModal();
+            triggerHaptic("success");
+            Alert.alert(
+                "Success",
+                "Password has been changed successfully.",
+                [{ text: "OK" }]
+            );
+        } catch (err: any) {
+            triggerHaptic("error");
+            Alert.alert(
+                "Error",
+                err.message || "Failed to update password. Please try again.",
+                [{ text: "OK" }]
+            );
+        } finally {
+            setResetLoading(false);
+        }
+    };
+
+    const reqs = checkPasswordRequirements(newPassword);
+
+    const RequirementRow = ({ label, met }: { label: string; met: boolean }) => (
+        <View style={styles.reqRow}>
+            <Feather
+                name={met ? "check-circle" : "circle"}
+                size={14}
+                color={met ? COLORS.success : COLORS.gray400}
+                style={{ marginRight: 8 }}
+            />
+            <Text style={[styles.reqText, met && styles.reqTextMet]}>
+                {label}
+            </Text>
+        </View>
+    );
 
     useEffect(() => {
         // Load user session
@@ -196,8 +285,12 @@ export default function SettingsScreen() {
                     <Text style={styles.profileName}>{session?.name ?? "User"}</Text>
 
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={styles.passwordBtn} activeOpacity={0.85}>
-                            <Text style={styles.passwordText}>PASSWORD</Text>
+                        <TouchableOpacity
+                            style={styles.passwordBtn}
+                            activeOpacity={0.85}
+                            onPress={() => setResetModalVisible(true)}
+                        >
+                            <Text style={styles.passwordText}>Reset Password</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -329,6 +422,83 @@ export default function SettingsScreen() {
                 {/* Footer Copyright */}
                 <Text style={styles.footerText}>© 2026 Revopz. All rights reserved.</Text>
             </ScrollView>
+
+            <Modal
+                visible={resetModalVisible}
+                animationType="fade"
+                transparent={true}
+                onRequestClose={closeResetModal}
+            >
+                <View style={styles.modalBackdrop}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>Reset Password</Text>
+                        
+                        <CustomInput
+                            label="Current Password"
+                            placeholder="Enter current password"
+                            value={currentPassword}
+                            onChangeText={setCurrentPassword}
+                            secureTextEntry
+                            editable={!resetLoading}
+                            error={resetErrors.current}
+                        />
+                        
+                        <CustomInput
+                            label="New Password"
+                            placeholder="Enter new password"
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                            secureTextEntry
+                            editable={!resetLoading}
+                            error={resetErrors.newPassword}
+                        />
+
+                        {/* Password requirements indicators */}
+                        <View style={styles.reqsContainer}>
+                            <RequirementRow label="At least 8 characters" met={reqs.hasMinLength} />
+                            <RequirementRow label="At least one uppercase letter (A-Z)" met={reqs.hasUppercase} />
+                            <RequirementRow label="At least one lowercase letter (a-z)" met={reqs.hasLowercase} />
+                            <RequirementRow label="At least one number (0-9)" met={reqs.hasNumber} />
+                            <RequirementRow label="At least one special character (!@#...)" met={reqs.hasSpecialChar} />
+                        </View>
+                        
+                        <CustomInput
+                            label="Repeat Password"
+                            placeholder="Confirm new password"
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry
+                            editable={!resetLoading}
+                            error={resetErrors.confirm}
+                        />
+
+                        <View style={styles.modalActionButtons}>
+                            <TouchableOpacity
+                                style={styles.modalCancelBtn}
+                                onPress={closeResetModal}
+                                disabled={resetLoading}
+                            >
+                                <Text style={styles.modalCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.modalSubmitBtn,
+                                    (!isPasswordValid(reqs) || newPassword !== confirmPassword) && styles.modalSubmitBtnDisabled
+                                ]}
+                                onPress={handleResetPassword}
+                                disabled={resetLoading}
+                            >
+                                {resetLoading ? (
+                                    <ActivityIndicator size="small" color={COLORS.white} />
+                                ) : (
+                                    <Text style={styles.modalSubmitText}>Change Password</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -460,5 +630,90 @@ const styles = StyleSheet.create({
         color: COLORS.slate400,
         fontSize: 14,
         marginBottom: 16,
+    },
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: "rgba(15, 23, 42, 0.4)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    modalCard: {
+        width: "100%",
+        maxWidth: 360,
+        backgroundColor: COLORS.white,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        padding: 24,
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+        color: COLORS.slate800,
+        marginBottom: 20,
+        textAlign: "center",
+    },
+    reqsContainer: {
+        marginBottom: 16,
+        backgroundColor: COLORS.slate50,
+        padding: 12,
+        borderRadius: 12,
+        gap: 6,
+    },
+    reqRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    reqText: {
+        fontSize: 12,
+        color: COLORS.slate500,
+        fontWeight: "500",
+    },
+    reqTextMet: {
+        color: COLORS.success,
+        fontWeight: "600",
+    },
+    modalActionButtons: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        gap: 10,
+        marginTop: 10,
+    },
+    modalCancelBtn: {
+        flex: 1,
+        height: 48,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: COLORS.white,
+    },
+    modalCancelText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: COLORS.slate600,
+    },
+    modalSubmitBtn: {
+        flex: 1,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: COLORS.primary,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    modalSubmitBtnDisabled: {
+        opacity: 0.5,
+    },
+    modalSubmitText: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: COLORS.white,
     },
 });
