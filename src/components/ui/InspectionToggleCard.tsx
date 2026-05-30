@@ -42,8 +42,8 @@ export default function InspectionToggleCard({
             <Switch
                 value={value}
                 onValueChange={onValueChange}
-                trackColor={{ false: "#D1D5DB", true: COLORS.primary }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: COLORS.gray300, true: COLORS.primary }}
+                thumbColor={COLORS.white}
                 accessibilityLabel={title}
             />
         </View>
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
         borderColor: COLORS.border,
         padding: 16,
         gap: 12,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.04,
         shadowRadius: 4,
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: RADIUS.md,
-        backgroundColor: "#FEF3C7",
+        backgroundColor: COLORS.amber100,
         alignItems: "center",
         justifyContent: "center",
     },

@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View, Platform } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -23,7 +24,7 @@ export default function ScanBanner({ onPress, disabled = false }: ScanBannerProp
             </View>
             <Text style={styles.scanBannerText}>Scan Serial Numbers</Text>
             <View style={styles.scanBannerRight}>
-                <MaterialCommunityIcons name="barcode-scan" size={28} color="#FFFFFF" />
+                <MaterialCommunityIcons name="barcode-scan" size={28} color={COLORS.white} />
             </View>
         </TouchableOpacity>
     );
@@ -32,7 +33,7 @@ export default function ScanBanner({ onPress, disabled = false }: ScanBannerProp
 const styles = StyleSheet.create({
     scanBanner: {
         height: 86,
-        backgroundColor: "#0B57D0",
+        backgroundColor: COLORS.blueAccent,
         borderRadius: 16,
         flexDirection: "row",
         alignItems: "center",
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         ...Platform.select({
             ios: {
-                shadowColor: "#0B57D0",
+                shadowColor: COLORS.blueAccent,
                 shadowOffset: { width: 0, height: 6 },
                 shadowOpacity: 0.2,
                 shadowRadius: 10,
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
     scanBannerText: {
         fontSize: 17,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#FFFFFF",
+        color: COLORS.white,
     },
     scanBannerRight: {
         width: 32,

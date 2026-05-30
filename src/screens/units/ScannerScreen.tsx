@@ -17,6 +17,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import type { BarcodeScanningResult } from "expo-camera";
 
 import { scanEvents } from "@/utils/scanEvents";
+import { COLORS } from "@/theme/colors";
 
 const mockUseCameraPermissions = () => {
     return [null, async () => false] as const;
@@ -33,7 +34,6 @@ try {
     isCameraModuleAvailable = !!CameraView;
 } catch { }
 import { triggerHaptic } from "@/utils/haptics";
-import { COLORS } from "@/theme/colors";
 import { FONT_WEIGHT } from "@/theme/typography";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -47,7 +47,7 @@ export default function ScannerScreen() {
 
     const mode = params.mode === "single" ? "single" : "bulk";
     const targetQty = params.targetQty ? parseInt(params.targetQty, 10) : 24;
-    
+
     // Parse initial serials safely
     let parsedInitial: string[] = [];
     try {
@@ -79,8 +79,8 @@ export default function ScannerScreen() {
     if (!isCameraModuleAvailable) {
         return (
             <SafeAreaView style={styles.permissionContainer} edges={["top", "bottom"]}>
-                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-                
+                <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity
@@ -88,27 +88,27 @@ export default function ScannerScreen() {
                         style={styles.headerAction}
                         activeOpacity={0.7}
                     >
-                        <Feather name="arrow-left" size={24} color="#0B57D0" />
+                        <Feather name="arrow-left" size={24} color={COLORS.blueAccent} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Scan Items</Text>
                     <View style={styles.headerAction} />
                 </View>
 
                 <View style={styles.permissionContent}>
-                    <View style={[styles.permissionIconWrapper, { backgroundColor: "#FEE2E2" }]}>
-                        <MaterialCommunityIcons name="alert-circle-outline" size={64} color="#DC2626" />
+                    <View style={[styles.permissionIconWrapper, { backgroundColor: COLORS.red100 }]}>
+                        <MaterialCommunityIcons name="alert-circle-outline" size={64} color={COLORS.red600} />
                     </View>
                     <Text style={styles.permissionTitle}>Native Code Rebuild Required</Text>
                     <Text style={styles.permissionSubtitle}>
                         A new native module (expo-camera) was added. To use the camera barcode scanner, you must stop your current process and rebuild the app binary.
                     </Text>
-                    
+
                     <View style={styles.codeBlock}>
                         <Text style={styles.codeText}>npm run android</Text>
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.permissionBtn, { backgroundColor: "#DC2626" }]}
+                        style={[styles.permissionBtn, { backgroundColor: COLORS.red600 }]}
                         activeOpacity={0.8}
                         onPress={() => router.back()}
                     >
@@ -123,7 +123,7 @@ export default function ScannerScreen() {
         // Permissions are still loading
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0B57D0" />
+                <ActivityIndicator size="large" color={COLORS.blueAccent} />
             </View>
         );
     }
@@ -132,10 +132,10 @@ export default function ScannerScreen() {
         // Camera permissions are not granted yet
         return (
             <SafeAreaView style={styles.permissionContainer}>
-                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+                <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
                 <View style={styles.permissionContent}>
                     <View style={styles.permissionIconWrapper}>
-                        <MaterialCommunityIcons name="camera-lock" size={64} color="#D97706" />
+                        <MaterialCommunityIcons name="camera-lock" size={64} color={COLORS.warning} />
                     </View>
                     <Text style={styles.permissionTitle}>Camera Permission Required</Text>
                     <Text style={styles.permissionSubtitle}>
@@ -180,7 +180,7 @@ export default function ScannerScreen() {
             }, 2500);
 
             triggerHaptic("warning");
-            return; 
+            return;
         }
 
         if (mode === "single") {
@@ -191,10 +191,10 @@ export default function ScannerScreen() {
         } else {
             // Lock scanning immediately (synchronous)
             isScanningLocked.current = true;
-            
+
             // Add to scanned ref immediately (synchronous)
             scannedRef.current.add(barcodeData);
-            
+
             triggerHaptic("success");
 
             // Update UI state
@@ -221,7 +221,7 @@ export default function ScannerScreen() {
 
     return (
         <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
 
             {/* Custom Header matching the screenshot */}
             <View style={styles.header}>
@@ -230,7 +230,7 @@ export default function ScannerScreen() {
                     style={styles.headerAction}
                     activeOpacity={0.7}
                 >
-                    <Feather name="arrow-left" size={24} color="#0B57D0" />
+                    <Feather name="arrow-left" size={24} color={COLORS.blueAccent} />
                 </TouchableOpacity>
 
                 <Text style={styles.headerTitle}>Scan Items</Text>
@@ -243,7 +243,7 @@ export default function ScannerScreen() {
                     <MaterialCommunityIcons
                         name={torchEnabled ? "flashlight" : "flashlight-off"}
                         size={24}
-                        color="#0B57D0"
+                        color={COLORS.blueAccent}
                     />
                 </TouchableOpacity>
             </View>
@@ -276,7 +276,7 @@ export default function ScannerScreen() {
 
                         {warningMessage && (
                             <View style={styles.warningOverlay}>
-                                <Feather name="alert-triangle" size={16} color="#FFFFFF" />
+                                <Feather name="alert-triangle" size={16} color={COLORS.white} />
                                 <Text style={styles.warningText} numberOfLines={2}>
                                     {warningMessage}
                                 </Text>
@@ -354,7 +354,7 @@ export default function ScannerScreen() {
                         onPress={handleFinishScanning}
                     >
                         <Text style={styles.finishBtnText}>Finish Scanning</Text>
-                        <Feather name="send" size={16} color="#FFFFFF" style={{ marginLeft: 8 }} />
+                        <Feather name="send" size={16} color={COLORS.white} style={{ marginLeft: 8 }} />
                     </TouchableOpacity>
                 </View>
             )}
@@ -365,17 +365,17 @@ export default function ScannerScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
     },
     loadingContainer: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         alignItems: "center",
         justifyContent: "center",
     },
     permissionContainer: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
     },
     permissionContent: {
         flex: 1,
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: "#FFFBEB",
+        backgroundColor: COLORS.amber50,
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 24,
@@ -395,13 +395,13 @@ const styles = StyleSheet.create({
     permissionTitle: {
         fontSize: 20,
         fontWeight: "700",
-        color: "#1E293B",
+        color: COLORS.slate800,
         marginBottom: 12,
         textAlign: "center",
     },
     permissionSubtitle: {
         fontSize: 14,
-        color: "#64748B",
+        color: COLORS.textMuted,
         textAlign: "center",
         lineHeight: 22,
         marginBottom: 32,
@@ -409,32 +409,32 @@ const styles = StyleSheet.create({
     permissionBtn: {
         height: 48,
         width: "100%",
-        backgroundColor: "#0B57D0",
+        backgroundColor: COLORS.blueAccent,
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 12,
     },
     permissionBtnText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: "600",
     },
     permissionCancelBtn: {
         height: 48,
         width: "100%",
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
     },
     permissionCancelBtnText: {
-        color: "#475569",
+        color: COLORS.slate600,
         fontSize: 16,
         fontWeight: "600",
     },
     codeBlock: {
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
         borderRadius: 8,
         paddingHorizontal: 16,
         paddingVertical: 12,
@@ -442,12 +442,12 @@ const styles = StyleSheet.create({
         width: "100%",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
     },
     codeText: {
         fontFamily: Platform.OS === "ios" ? "CourierNewPSMT" : "monospace",
         fontSize: 15,
-        color: "#0F172A",
+        color: COLORS.slate900,
         fontWeight: "700",
     },
     header: {
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
         height: 56,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "#E2E8F0",
+        borderBottomColor: COLORS.border,
     },
     headerAction: {
         width: 40,
@@ -468,11 +468,11 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: "700",
-        color: "#1E293B",
+        color: COLORS.slate800,
     },
     cameraContainer: {
         flex: 1,
-        backgroundColor: "#000000",
+        backgroundColor: COLORS.black,
     },
     cameraOverlay: {
         flex: 1,
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(0, 0, 0, 0.25)",
     },
     overlayText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: "600",
         textShadowColor: "rgba(0, 0, 0, 0.75)",
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         width: 20,
         height: 20,
-        borderColor: "#0B57D0",
+        borderColor: COLORS.blueAccent,
     },
     topLeft: {
         top: -2,
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
         borderRightWidth: 4,
     },
     bottomSheet: {
-        backgroundColor: "#E5E7EB", // Light gray shade for matching the screenshot card
+        backgroundColor: COLORS.gray200, // Light gray shade for matching the screenshot card
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         padding: 20,
@@ -546,36 +546,36 @@ const styles = StyleSheet.create({
     metricLabel: {
         fontSize: 10,
         fontWeight: "700",
-        color: "#4B5563",
+        color: COLORS.gray600,
         letterSpacing: 0.5,
         marginBottom: 4,
     },
     metricValue: {
         fontSize: 14,
-        color: "#374151",
+        color: COLORS.gray700,
         fontWeight: "500",
     },
     metricValueHighlight: {
         fontSize: 22,
         fontWeight: "800",
-        color: "#0B57D0",
+        color: COLORS.blueAccent,
     },
     efficiencyIndicator: {
         width: 100,
         height: 8,
-        backgroundColor: "#D1D5DB",
+        backgroundColor: COLORS.gray300,
         borderRadius: 4,
         overflow: "hidden",
         marginTop: 6,
     },
     efficiencyBar: {
         height: "100%",
-        backgroundColor: "#0B57D0",
+        backgroundColor: COLORS.blueAccent,
     },
     sectionLabel: {
         fontSize: 11,
         fontWeight: "700",
-        color: "#4B5563",
+        color: COLORS.gray600,
         letterSpacing: 0.5,
         marginBottom: 8,
     },
@@ -587,26 +587,26 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#F3F4F6",
+        backgroundColor: COLORS.gray100,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: COLORS.gray200,
     },
     emptyScansText: {
         fontSize: 12,
-        color: "#9CA3AF",
+        color: COLORS.gray400,
     },
     horizontalScroll: {
         gap: 10,
     },
     scanCard: {
         width: 140,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 10,
         paddingHorizontal: 12,
         paddingVertical: 10,
         justifyContent: "center",
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
@@ -615,29 +615,29 @@ const styles = StyleSheet.create({
     scanCardLabel: {
         fontSize: 8,
         fontWeight: "800",
-        color: "#6B7280",
+        color: COLORS.gray500,
         marginBottom: 2,
     },
     scanCardValue: {
         fontSize: 13,
         fontWeight: "700",
-        color: "#0B57D0",
+        color: COLORS.blueAccent,
     },
     finishBtn: {
         height: 52,
-        backgroundColor: "#0B57D0",
+        backgroundColor: COLORS.blueAccent,
         borderRadius: 12,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        shadowColor: "#0B57D0",
+        shadowColor: COLORS.blueAccent,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 4,
     },
     finishBtnText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: "700",
     },
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 90,
         maxWidth: "85%",
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     warningText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 13,
         fontWeight: "600",
         textAlign: "center",

@@ -18,6 +18,7 @@ import { fetchRecentActivity } from "@/services/activityService";
 import { useAuth } from "@/context/AuthContext";
 import { logoutUser } from "@/services/authService";
 import type { ActivityItem } from "@/services/activityService";
+import { COLORS } from "@/theme/colors";
 
 export default function HomeScreen() {
     const { user, authReady } = useAuth();
@@ -101,7 +102,7 @@ export default function HomeScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
             {/* ── Top Navigation Bar ── */}
             <HeaderBar />
@@ -147,7 +148,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: "#F8FAFC",
+        backgroundColor: COLORS.background,
     },
     scrollContent: {
         paddingHorizontal: 16,
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
     welcome: {
         fontSize: 26,
         fontWeight: "700",
-        color: "#111827",
+        color: COLORS.primary,
         marginTop: 4,
         marginBottom: 20,
     },
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         borderWidth: 1.5,
         borderStyle: "dashed",
-        borderColor: "#CBD5E1",
+        borderColor: COLORS.slate300,
         borderRadius: 16,
         padding: 12,
     },

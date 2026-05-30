@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as LocalAuthentication from "expo-local-authentication";
 
+import { COLORS } from "@/theme/colors";
 import { Alert } from "@/context/AlertContext";
 import HeaderBar from "@/components/ui/HeaderBar";
 import { logoutUser } from "@/services/authService";
@@ -179,7 +180,7 @@ export default function SettingsScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
             {/* Header / Top Navigation Bar */}
             <HeaderBar />
@@ -206,8 +207,8 @@ export default function SettingsScreen() {
                 <View style={styles.card}>
                     {/* Enable App Lock Toggle */}
                     <View style={styles.row}>
-                        <View style={[styles.iconBg, { backgroundColor: "#FEF3C7" }]}>
-                            <MaterialCommunityIcons name="shield-lock" size={22} color="#D97706" />
+                        <View style={[styles.iconBg, { backgroundColor: COLORS.amber100 }]}>
+                            <MaterialCommunityIcons name="shield-lock" size={22} color={COLORS.warning} />
                         </View>
                         <View style={styles.rowText}>
                             <Text style={styles.rowTitle}>Enable App Lock</Text>
@@ -216,9 +217,9 @@ export default function SettingsScreen() {
                         <Switch
                             value={appLockEnabled}
                             onValueChange={toggleAppLock}
-                            trackColor={{ false: "#E2E8F0", true: "#D97706" }}
-                            thumbColor="#FFFFFF"
-                            ios_backgroundColor="#E2E8F0"
+                            trackColor={{ false: COLORS.border, true: COLORS.warning }}
+                            thumbColor={COLORS.white}
+                            ios_backgroundColor={COLORS.border}
                         />
                     </View>
 
@@ -227,14 +228,14 @@ export default function SettingsScreen() {
                         <>
                             <View style={styles.rowDivider} />
                             <TouchableOpacity style={styles.row} onPress={handleChangePin} activeOpacity={0.7}>
-                                <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
-                                    <MaterialCommunityIcons name="lock-reset" size={22} color="#475569" />
+                                <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
+                                    <MaterialCommunityIcons name="lock-reset" size={22} color={COLORS.slate600} />
                                 </View>
                                 <View style={styles.rowText}>
                                     <Text style={styles.rowTitle}>Change App PIN</Text>
                                     <Text style={styles.rowSubtitle}>Update your 4-digit passcode</Text>
                                 </View>
-                                <Feather name="chevron-right" size={18} color="#94A3B8" />
+                                <Feather name="chevron-right" size={18} color={COLORS.slate400} />
                             </TouchableOpacity>
                         </>
                     )}
@@ -244,14 +245,14 @@ export default function SettingsScreen() {
                         <>
                             <View style={styles.rowDivider} />
                             <TouchableOpacity style={styles.row} onPress={showTimeoutPicker} activeOpacity={0.7}>
-                                <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
-                                    <MaterialCommunityIcons name="timer-outline" size={22} color="#475569" />
+                                <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
+                                    <MaterialCommunityIcons name="timer-outline" size={22} color={COLORS.slate600} />
                                 </View>
                                 <View style={styles.rowText}>
                                     <Text style={styles.rowTitle}>Lock Timeout</Text>
                                     <Text style={styles.rowSubtitle}>Lock after {formatTimeoutLabel(resumeTimeout)} in background</Text>
                                 </View>
-                                <Feather name="chevron-right" size={18} color="#94A3B8" />
+                                <Feather name="chevron-right" size={18} color={COLORS.slate400} />
                             </TouchableOpacity>
                         </>
                     )}
@@ -261,8 +262,8 @@ export default function SettingsScreen() {
                         <>
                             <View style={styles.rowDivider} />
                             <View style={styles.row}>
-                                <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
-                                    <MaterialCommunityIcons name="fingerprint" size={22} color="#3B82F6" />
+                                <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
+                                    <MaterialCommunityIcons name="fingerprint" size={22} color={COLORS.blueClassic} />
                                 </View>
                                 <View style={styles.rowText}>
                                     <Text style={styles.rowTitle}>Biometric Unlock</Text>
@@ -271,9 +272,9 @@ export default function SettingsScreen() {
                                 <Switch
                                     value={biometricEnabled}
                                     onValueChange={toggleBiometric}
-                                    trackColor={{ false: "#E2E8F0", true: "#111827" }}
-                                    thumbColor="#FFFFFF"
-                                    ios_backgroundColor="#E2E8F0"
+                                    trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                                    thumbColor={COLORS.white}
+                                    ios_backgroundColor={COLORS.border}
                                 />
                             </View>
                         </>
@@ -284,8 +285,8 @@ export default function SettingsScreen() {
                 <Text style={styles.categoryHeader}>APP PREFERENCES</Text>
                 <TouchableOpacity activeOpacity={0.8} style={styles.card}>
                     <View style={styles.row}>
-                        <View style={[styles.iconBg, { backgroundColor: "#ECFDF5" }]}>
-                            <MaterialCommunityIcons name="vibrate" size={22} color="#10B981" />
+                        <View style={[styles.iconBg, { backgroundColor: COLORS.emerald50 }]}>
+                            <MaterialCommunityIcons name="vibrate" size={22} color={COLORS.emerald500} />
                         </View>
                         <View style={styles.rowText}>
                             <Text style={styles.rowTitle}>Haptic Feedback</Text>
@@ -294,9 +295,9 @@ export default function SettingsScreen() {
                         <Switch
                             value={hapticEnabled}
                             onValueChange={toggleHaptic}
-                            trackColor={{ false: "#E2E8F0", true: "#111827" }}
-                            thumbColor="#FFFFFF"
-                            ios_backgroundColor="#E2E8F0"
+                            trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                            thumbColor={COLORS.white}
+                            ios_backgroundColor={COLORS.border}
                         />
                     </View>
                 </TouchableOpacity>
@@ -305,8 +306,8 @@ export default function SettingsScreen() {
                 <Text style={styles.categoryHeader}>SYSTEM</Text>
                 <TouchableOpacity activeOpacity={0.8} style={styles.card}>
                     <View style={styles.row}>
-                        <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
-                            <MaterialCommunityIcons name="information-outline" size={22} color="#64748B" />
+                        <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
+                            <MaterialCommunityIcons name="information-outline" size={22} color={COLORS.slate500} />
                         </View>
                         <View style={styles.rowText}>
                             <Text style={styles.rowTitle}>App Version</Text>
@@ -321,7 +322,7 @@ export default function SettingsScreen() {
                     onPress={handleLogout}
                     activeOpacity={0.8}
                 >
-                    <Feather name="log-out" size={20} color="#DC2626" style={{ marginRight: 8 }} />
+                    <Feather name="log-out" size={20} color={COLORS.red600} style={{ marginRight: 8 }} />
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
 
@@ -335,21 +336,21 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: "#F8FAFC",
+        backgroundColor: COLORS.background,
     },
     scrollContent: {
         paddingTop: 20,
         paddingBottom: 110, // clear the floating tab bar
     },
     profileCard: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         padding: 20,
         marginHorizontal: 20,
         marginBottom: 24,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.03,
         shadowRadius: 8,
@@ -358,20 +359,20 @@ const styles = StyleSheet.create({
     profileName: {
         fontSize: 24,
         fontWeight: "700",
-        color: "#1E293B",
+        color: COLORS.slate800,
     },
     actionButtons: {
         flexDirection: "row",
         marginTop: 14,
     },
     passwordBtn: {
-        backgroundColor: "#111827",
+        backgroundColor: COLORS.primary,
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
     },
     passwordText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 13,
         fontWeight: "700",
         letterSpacing: 0.5,
@@ -379,21 +380,21 @@ const styles = StyleSheet.create({
     categoryHeader: {
         fontSize: 12,
         fontWeight: "700",
-        color: "#475569",
+        color: COLORS.slate600,
         marginHorizontal: 20,
         marginBottom: 8,
         letterSpacing: 0.5,
     },
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         paddingHorizontal: 16,
         paddingVertical: 14,
         marginHorizontal: 20,
         marginBottom: 24,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.03,
         shadowRadius: 8,
@@ -405,7 +406,7 @@ const styles = StyleSheet.create({
     },
     rowDivider: {
         height: 1,
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
         marginVertical: 12,
         marginLeft: 52,
     },
@@ -423,21 +424,21 @@ const styles = StyleSheet.create({
     rowTitle: {
         fontSize: 16,
         fontWeight: "600",
-        color: "#1E293B",
+        color: COLORS.slate800,
     },
     rowSubtitle: {
         fontSize: 13,
-        color: "#64748B",
+        color: COLORS.textMuted,
         marginTop: 2,
     },
     versionText: {
         fontSize: 15,
         fontWeight: "600",
-        color: "#64748B",
+        color: COLORS.textMuted,
         fontFamily: "System",
     },
     logoutBtn: {
-        backgroundColor: "#FEE2E2",
+        backgroundColor: COLORS.red100,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
@@ -450,13 +451,13 @@ const styles = StyleSheet.create({
         borderColor: "rgba(220, 38, 38, 0.15)",
     },
     logoutText: {
-        color: "#DC2626",
+        color: COLORS.red600,
         fontSize: 16,
         fontWeight: "700",
     },
     footerText: {
         textAlign: "center",
-        color: "#94A3B8",
+        color: COLORS.slate400,
         fontSize: 14,
         marginBottom: 16,
     },

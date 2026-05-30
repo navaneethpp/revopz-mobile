@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
@@ -82,18 +83,18 @@ export default function TimelineItem({
     } = {
         label: "MANUFACTURING COMPLETED",
         icon: "battery",
-        iconColor: "#10B981",
-        circleBg: "#ECFDF5",
-        badgeColor: "#059669",
+        iconColor: COLORS.emerald500,
+        circleBg: COLORS.emerald50,
+        badgeColor: COLORS.emerald600,
         metaLeftText: `SKU: ${productNumber}`,
         metaLeftIsLink: true,
         metaRightText: manufacturedDate ? `Mfg: ${manufacturedDate}` : `Line A-${(numSeed % 4) + 1}`,
         metaRightIsLink: false,
         highlightLeft: "",
-        highlightLeftColor: "#059669",
+        highlightLeftColor: COLORS.emerald600,
         highlightRight: `Warranty: ${warrantyMonths} Mos (${warrantyStatus === "not_registered" ? "Not Registered" : "Registered"})`,
-        highlightBg: "#ECFDF5",
-        highlightBorderColor: "#A7F3D0",
+        highlightBg: COLORS.emerald50,
+        highlightBorderColor: COLORS.emerald200,
         isTransfer: false,
         transferFrom: "",
         transferTo: "",
@@ -103,18 +104,18 @@ export default function TimelineItem({
         config = {
             label: "TESTING FAILED",
             icon: "zap",
-            iconColor: "#EF4444",
-            circleBg: "#FEF2F2",
-            badgeColor: "#DC2626",
+            iconColor: COLORS.red500,
+            circleBg: COLORS.red50,
+            badgeColor: COLORS.red600,
             metaLeftText: "Efficiency Test",
             metaLeftIsLink: false,
             metaRightText: `SKU: ${productNumber}`,
             metaRightIsLink: true,
             highlightLeft: "",
-            highlightLeftColor: "#DC2626",
+            highlightLeftColor: COLORS.red600,
             highlightRight: `Voltage Fluctuations Detected (Mfg: ${manufacturedDate || "N/A"})`,
-            highlightBg: "#FEF2F2",
-            highlightBorderColor: "#FCA5A5",
+            highlightBg: COLORS.red50,
+            highlightBorderColor: COLORS.red300,
             isTransfer: false,
             transferFrom: "",
             transferTo: "",
@@ -123,18 +124,18 @@ export default function TimelineItem({
         config = {
             label: "QUALITY CHECK PASSED",
             icon: "sliders",
-            iconColor: "#D97706",
-            circleBg: "#FFFBEB",
-            badgeColor: "#D97706",
+            iconColor: COLORS.warning,
+            circleBg: COLORS.amber50,
+            badgeColor: COLORS.warning,
             metaLeftText: "Final QA Stage",
             metaLeftIsLink: false,
             metaRightText: `SKU: ${productNumber}`,
             metaRightIsLink: true,
             highlightLeft: "",
-            highlightLeftColor: "#1E293B",
+            highlightLeftColor: COLORS.slate800,
             highlightRight: `Warranty: ${warrantyStatus === "not_registered" ? "Not Registered" : "Registered"} (Mfg: ${manufacturedDate || "N/A"})`,
-            highlightBg: "#F1F5F9",
-            highlightBorderColor: "#E2E8F0",
+            highlightBg: COLORS.slate100,
+            highlightBorderColor: COLORS.border,
             isTransfer: false,
             transferFrom: "",
             transferTo: "",
@@ -143,18 +144,18 @@ export default function TimelineItem({
         config = {
             label: "WAREHOUSE TRANSFER",
             icon: "trending-up",
-            iconColor: "#2563EB",
-            circleBg: "#F1F5F9",
-            badgeColor: "#2563EB",
+            iconColor: COLORS.blue600,
+            circleBg: COLORS.slate100,
+            badgeColor: COLORS.blue600,
             metaLeftText: "",
             metaLeftIsLink: false,
             metaRightText: "",
             metaRightIsLink: false,
             highlightLeft: "",
-            highlightLeftColor: "#2563EB",
+            highlightLeftColor: COLORS.blue600,
             highlightRight: `Logistics Sync • Mfg: ${manufacturedDate || "N/A"}`,
-            highlightBg: "#F1F5F9",
-            highlightBorderColor: "#BFDBFE",
+            highlightBg: COLORS.slate100,
+            highlightBorderColor: COLORS.blue100,
             isTransfer: true,
             transferFrom: "Production Floor",
             transferTo: `Storage Hub ${String.fromCharCode(66 + (numSeed % 3))}`, // storage hub B, C, etc.
@@ -212,13 +213,13 @@ export default function TimelineItem({
                 {config.isTransfer ? (
                     <View style={styles.transferFlow}>
                         <View style={styles.transferRow}>
-                            <View style={[styles.transferDot, { backgroundColor: "#94A3B8" }]} />
+                            <View style={[styles.transferDot, { backgroundColor: COLORS.slate400 }]} />
                             <Text style={styles.transferLabel}>
                                 From: <Text style={styles.transferValue}>{config.transferFrom}</Text>
                             </Text>
                         </View>
                         <View style={styles.transferRow}>
-                            <View style={[styles.transferDot, { backgroundColor: "#2563EB" }]} />
+                            <View style={[styles.transferDot, { backgroundColor: COLORS.blue600 }]} />
                             <Text style={styles.transferLabel}>
                                 To: <Text style={styles.transferValue}>{config.transferTo}</Text>
                             </Text>
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
     line: {
         position: "absolute",
         width: 2,
-        backgroundColor: "#E2E8F0",
+        backgroundColor: COLORS.border,
         left: 24, // center alignment for 50px col width ((50 - 2) / 2)
     },
     circle: {
@@ -312,13 +313,13 @@ const styles = StyleSheet.create({
     },
     card: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: COLORS.gray200,
         padding: 16,
         marginBottom: 16,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.02,
         shadowRadius: 6,
@@ -337,13 +338,13 @@ const styles = StyleSheet.create({
     },
     timeText: {
         fontSize: 13,
-        color: "#94A3B8",
+        color: COLORS.slate400,
         fontWeight: "500",
     },
     productName: {
         fontSize: 16,
         fontWeight: "700",
-        color: "#1E293B",
+        color: COLORS.slate800,
         marginBottom: 10,
         lineHeight: 22,
     },
@@ -362,11 +363,11 @@ const styles = StyleSheet.create({
     },
     metaText: {
         fontSize: 13,
-        color: "#475569",
+        color: COLORS.slate600,
         fontWeight: "500",
     },
     metaLinkText: {
-        color: "#111827",
+        color: COLORS.primary,
         fontWeight: "600",
     },
     transferFlow: {
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
         fontWeight: "500",
     },
     transferValue: {
-        color: "#1E293B",
+        color: COLORS.slate800,
         fontWeight: "600",
     },
     highlightBox: {

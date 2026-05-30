@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { Feather } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
@@ -15,7 +16,7 @@ export default function ActionCard({ icon, title, subtitle, onPress }: Props) {
             activeOpacity={0.8}
             style={styles.card}
         >
-            <Feather name={icon} size={36} color="#111827" />
+            <Feather name={icon} size={36} color={COLORS.primary} />
 
             <Text style={styles.title}>{title}</Text>
 
@@ -26,10 +27,10 @@ export default function ActionCard({ icon, title, subtitle, onPress }: Props) {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#ffffff",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: COLORS.gray200,
         paddingVertical: 28,
         paddingHorizontal: 16,
         alignItems: "center",
@@ -37,12 +38,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: "600",
-        color: "#111827",
+        color: COLORS.primary,
         marginTop: 14,
     },
     subtitle: {
         fontSize: 14,
-        color: "#6B7280",
+        color: COLORS.gray500,
         textAlign: "center",
         marginTop: 6,
         lineHeight: 20,

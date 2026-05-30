@@ -27,7 +27,7 @@ export default function ProductSelector({ value, loading, onPress, disabled = fa
                     <MaterialCommunityIcons
                         name="package-variant-closed"
                         size={20}
-                        color={disabled ? "#94A3B8" : "#64748B"}
+                        color={disabled ? COLORS.slate400 : "#64748B"}
                         style={{ marginRight: 10 }}
                     />
                     <Text style={[styles.dropdownText, disabled && styles.dropdownTextDisabled]} numberOfLines={1}>
@@ -38,7 +38,7 @@ export default function ProductSelector({ value, loading, onPress, disabled = fa
                             : "Select Product Name"}
                     </Text>
                 </View>
-                <Feather name="chevron-down" size={18} color={disabled ? "#CBD5E1" : "#64748B"} />
+                <Feather name="chevron-down" size={18} color={disabled ? COLORS.slate300 : "#64748B"} />
             </TouchableOpacity>
         </View>
     );
@@ -46,10 +46,10 @@ export default function ProductSelector({ value, loading, onPress, disabled = fa
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         padding: 16,
     },
     cardLabel: {
@@ -64,16 +64,16 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         paddingHorizontal: 14,
         height: 50,
     },
     dropdownSelectorDisabled: {
-        backgroundColor: "#F8FAFC",
-        borderColor: "#E2E8F0",
+        backgroundColor: COLORS.background,
+        borderColor: COLORS.border,
     },
     dropdownLeft: {
         flexDirection: "row",
@@ -87,6 +87,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     dropdownTextDisabled: {
-        color: "#94A3B8",
+        color: COLORS.slate400,
     },
 });

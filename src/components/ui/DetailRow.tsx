@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -19,7 +20,7 @@ export default function DetailRow({ label, value, icon }: DetailRowProps) {
     return (
         <View style={styles.detailRow}>
             <View style={styles.detailIconContainer}>
-                <Feather name={icon} size={16} color="#111827" />
+                <Feather name={icon} size={16} color={COLORS.primary} />
             </View>
             <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>{label}</Text>
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 8,
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
         alignItems: "center",
         justifyContent: "center",
         marginRight: 12,
@@ -58,7 +59,7 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         fontSize: 14,
-        color: "#1E293B",
+        color: COLORS.slate800,
         fontWeight: "600",
     },
 });

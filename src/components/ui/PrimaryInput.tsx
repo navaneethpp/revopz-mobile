@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 interface PrimaryButtonProps {
@@ -24,7 +25,7 @@ export default function PrimaryButton({
             activeOpacity={0.8}
         >
             {loading ? (
-                <ActivityIndicator color={'#ffffff'} />
+                <ActivityIndicator color={COLORS.white} />
             ) : (
                 <Text style={styles.text}>
                     {title}
@@ -38,14 +39,14 @@ const styles = StyleSheet.create({
     button: {
         height: 54,
         borderRadius: 27,
-        backgroundColor: '#0f52cc',
+        backgroundColor: COLORS.blueLink,
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
         marginTop: 12,
     },
     text: {
-        color: '#ffffff',
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: '600',
     },

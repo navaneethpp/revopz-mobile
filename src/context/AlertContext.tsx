@@ -51,9 +51,9 @@ const AlertContext = createContext<AlertContextProps | undefined>(undefined);
 
 // Primary Amber Color Palette
 const AMBER_COLORS = {
-    primary: "#D97706",    // Dark amber / warning
-    lightBg: "#FEF3C7",    // Light amber background
-    hover: "#B45309",      // Hover / active amber
+    primary: COLORS.warning,    // Dark amber / warning
+    lightBg: COLORS.amber100,    // Light amber background
+    hover: COLORS.amber700,      // Hover / active amber
 };
 
 export function AlertProvider({ children }: { children: React.ReactNode }) {
@@ -355,15 +355,15 @@ const styles = StyleSheet.create({
     alertBox: {
         width: "100%",
         maxWidth: 340,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         padding: 24,
         alignItems: "center",
         ...Platform.select({
             ios: {
-                shadowColor: "#0F172A",
+                shadowColor: COLORS.slate900,
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.12,
                 shadowRadius: 16,
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: "#FEF3C7", // Light amber matching theme
+        backgroundColor: COLORS.amber100, // Light amber matching theme
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 16,
@@ -385,13 +385,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#191C1E",
+        color: COLORS.textPrimary,
         textAlign: "center",
         marginBottom: 8,
     },
     message: {
         fontSize: 14,
-        color: "#434655",
+        color: COLORS.textSecondary,
         textAlign: "center",
         lineHeight: 20,
         marginBottom: 24,
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
         }),
     },
     defaultBtnText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 15,
         fontWeight: FONT_WEIGHT.bold as any,
     },
@@ -436,26 +436,26 @@ const styles = StyleSheet.create({
         backgroundColor: "transparent",
         borderRadius: RADIUS.md,
         borderWidth: 1.5,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 16,
     },
     cancelBtnText: {
-        color: "#434655",
+        color: COLORS.textSecondary,
         fontSize: 15,
         fontWeight: FONT_WEIGHT.semibold as any,
     },
     destructiveBtn: {
         height: 48,
-        backgroundColor: "#BA1A1A", // RED/error matching theme
+        backgroundColor: COLORS.error, // RED/error matching theme
         borderRadius: RADIUS.md,
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 16,
     },
     destructiveBtnText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 15,
         fontWeight: FONT_WEIGHT.bold as any,
     },
@@ -469,15 +469,15 @@ const styles = StyleSheet.create({
     loadingBox: {
         width: "100%",
         maxWidth: 280,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         padding: 32,
         alignItems: "center",
         ...Platform.select({
             ios: {
-                shadowColor: "#0F172A",
+                shadowColor: COLORS.slate900,
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.12,
                 shadowRadius: 16,
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         fontSize: 15,
-        color: "#434655",
+        color: COLORS.textSecondary,
         fontWeight: "600",
         textAlign: "center",
         lineHeight: 22,

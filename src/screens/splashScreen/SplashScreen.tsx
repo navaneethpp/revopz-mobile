@@ -13,6 +13,8 @@ import { isLoggedIn } from "@/utils/storage";
 import { checkInternetAndSyncFirestore } from "@/utils/checkInternetAndSyncFirestore";
 import { isPinSet } from "@/utils/pinStorage";
 
+import { COLORS } from "@/theme/colors";
+
 const { width } = Dimensions.get("window");
 const LOGO_SIZE = width * 0.32;
 
@@ -99,7 +101,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#ffffff",
+        backgroundColor: COLORS.white,
         alignItems: "center",
         justifyContent: "center",
     },

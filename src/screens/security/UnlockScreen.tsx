@@ -174,7 +174,7 @@ export default function UnlockScreen({ onUnlock }: UnlockScreenProps) {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
 
             {/* Header info */}
             <View style={styles.header}>
@@ -191,7 +191,7 @@ export default function UnlockScreen({ onUnlock }: UnlockScreenProps) {
             <View style={styles.centerSection}>
                 {lockoutSeconds > 0 ? (
                     <View style={styles.lockoutBox}>
-                        <MaterialCommunityIcons name="lock-clock" size={48} color="#DC2626" style={{ marginBottom: 12 }} />
+                        <MaterialCommunityIcons name="lock-clock" size={48} color={COLORS.red600} style={{ marginBottom: 12 }} />
                         <Text style={styles.lockoutTitle}>Too many incorrect attempts</Text>
                         <Text style={styles.lockoutTimer}>
                             Try again in {lockoutSeconds} seconds
@@ -258,7 +258,7 @@ export default function UnlockScreen({ onUnlock }: UnlockScreenProps) {
                             <MaterialCommunityIcons
                                 name="fingerprint"
                                 size={28}
-                                color={lockoutSeconds > 0 ? "#CBD5E1" : "#D97706"}
+                                color={lockoutSeconds > 0 ? COLORS.slate300 : COLORS.warning}
                             />
                         </TouchableOpacity>
                     ) : (
@@ -283,7 +283,7 @@ export default function UnlockScreen({ onUnlock }: UnlockScreenProps) {
                         <Feather
                             name="delete"
                             size={24}
-                            color={lockoutSeconds > 0 ? "#CBD5E1" : "#1E293B"}
+                            color={lockoutSeconds > 0 ? COLORS.slate300 : COLORS.slate800}
                         />
                     </TouchableOpacity>
                 </View>
@@ -295,7 +295,7 @@ export default function UnlockScreen({ onUnlock }: UnlockScreenProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         justifyContent: "space-between",
         paddingVertical: SPACING.xl,
     },
@@ -307,19 +307,19 @@ const styles = StyleSheet.create({
     brandTitle: {
         fontSize: 16,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#D97706",
+        color: COLORS.warning,
         letterSpacing: 1.5,
         marginBottom: SPACING.sm,
     },
     title: {
         fontSize: 22,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#1E293B",
+        color: COLORS.slate800,
         marginBottom: SPACING.xs,
     },
     subtitle: {
         fontSize: 14,
-        color: "#64748B",
+        color: COLORS.textMuted,
         textAlign: "center",
         lineHeight: 20,
         paddingHorizontal: SPACING.sm,
@@ -341,16 +341,16 @@ const styles = StyleSheet.create({
         height: 16,
         borderRadius: 8,
         borderWidth: 1.5,
-        borderColor: "#CBD5E1",
+        borderColor: COLORS.slate300,
         backgroundColor: "transparent",
     },
     dotFilled: {
-        borderColor: "#D97706",
-        backgroundColor: "#D97706",
+        borderColor: COLORS.warning,
+        backgroundColor: COLORS.warning,
     },
     dotError: {
-        borderColor: "#DC2626",
-        backgroundColor: "#DC2626",
+        borderColor: COLORS.red600,
+        backgroundColor: COLORS.red600,
     },
     lockoutBox: {
         alignItems: "center",
@@ -359,12 +359,12 @@ const styles = StyleSheet.create({
     lockoutTitle: {
         fontSize: 16,
         fontWeight: FONT_WEIGHT.semibold as any,
-        color: "#DC2626",
+        color: COLORS.red600,
         marginBottom: 4,
     },
     lockoutTimer: {
         fontSize: 14,
-        color: "#64748B",
+        color: COLORS.textMuted,
     },
     errorContainer: {
         height: 24,
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         fontSize: 14,
-        color: "#DC2626",
+        color: COLORS.red600,
         fontWeight: "500",
     },
     keypad: {
@@ -389,12 +389,12 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: "#F8FAFC",
+        backgroundColor: COLORS.slate50,
         alignItems: "center",
         justifyContent: "center",
     },
     keyDisabled: {
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
     },
     keyEmpty: {
         width: 80,
@@ -403,9 +403,9 @@ const styles = StyleSheet.create({
     keyText: {
         fontSize: 26,
         fontWeight: "600",
-        color: "#1E293B",
+        color: COLORS.slate800,
     },
     keyTextDisabled: {
-        color: "#CBD5E1",
+        color: COLORS.slate300,
     },
 });

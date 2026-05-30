@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React from "react";
 import {
     StatusBar,
@@ -18,12 +19,12 @@ export default function ScreenContainer({
         <SafeAreaView
             style={{
                 flex: 1,
-                backgroundColor: "#F4F4F4",
+                backgroundColor: COLORS.lightGray,
             }}
         >
             <StatusBar
                 barStyle="dark-content"
-                backgroundColor="#F4F4F4"
+                backgroundColor={COLORS.lightGray}
             />
 
             <KeyboardAvoidingView

@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
         fontWeight: FONT_WEIGHT.medium as any,
     },
     placeholderText: {
-        color: "#94A3B8",
+        color: COLORS.slate400,
         fontWeight: FONT_WEIGHT.regular as any,
     },
     /* Modal */
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 4,
         borderRadius: 2,
-        backgroundColor: "#CBD5E1",
+        backgroundColor: COLORS.slate300,
         alignSelf: "center",
         marginBottom: 16,
     },

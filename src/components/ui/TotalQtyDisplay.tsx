@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { FONT_WEIGHT } from "@/theme/typography";
@@ -21,10 +22,10 @@ export default function TotalQtyDisplay({ value }: TotalQtyDisplayProps) {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         padding: 16,
     },
     cardLabel: {
@@ -37,17 +38,17 @@ const styles = StyleSheet.create({
     },
     qtyContainer: {
         height: 52,
-        backgroundColor: "#F8FAFC",
+        backgroundColor: COLORS.background,
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         alignItems: "center",
         justifyContent: "center",
     },
     qtyDisplayText: {
         fontSize: 22,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#0B57D0",
+        color: COLORS.blueAccent,
         textAlign: "center",
     },
 });

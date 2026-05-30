@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import ActivityItem from "./ActivityItem";
@@ -31,7 +32,7 @@ export default function RecentActivityCard({ entries = [], loading = false, erro
             {/* Loading state */}
             {loading && (
                 <View style={styles.centerBox}>
-                    <ActivityIndicator size="small" color="#111827" />
+                    <ActivityIndicator size="small" color={COLORS.primary} />
                     <Text style={styles.loadingText}>Loading activity…</Text>
                 </View>
             )}
@@ -72,10 +73,10 @@ export default function RecentActivityCard({ entries = [], loading = false, erro
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#ffffff",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: COLORS.gray200,
         padding: 20,
     },
     header: {
@@ -87,12 +88,12 @@ const styles = StyleSheet.create({
     heading: {
         fontSize: 17,
         fontWeight: "700",
-        color: "#111827",
+        color: COLORS.primary,
     },
     viewAll: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#111827",
+        color: COLORS.primary,
     },
     centerBox: {
         alignItems: "center",
@@ -100,16 +101,16 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         fontSize: 13,
-        color: "#6B7280",
+        color: COLORS.gray500,
         marginTop: 8,
     },
     emptyText: {
         fontSize: 14,
-        color: "#9CA3AF",
+        color: COLORS.gray400,
     },
     errorText: {
         fontSize: 14,
-        color: "#DC2626",
+        color: COLORS.red600,
         fontWeight: "500",
     },
     retryBtn: {
@@ -117,11 +118,11 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 16,
         borderRadius: 8,
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
     },
     retryText: {
         fontSize: 13,
-        color: "#111827",
+        color: COLORS.primary,
         fontWeight: "600",
     },
 });

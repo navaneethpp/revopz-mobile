@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import { useEffect, useRef, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -103,13 +104,13 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
                     <Feather
                         name="grid"
                         size={20}
-                        color={isHome ? "#fff" : "#6B7280"}
+                        color={isHome ? COLORS.white : COLORS.gray500}
                     />
                 </Animated.View>
                 <Text
                     style={[
                         styles.tabLabel,
-                        { color: isHome ? "#fff" : "#6B7280" },
+                        { color: isHome ? COLORS.white : COLORS.gray500 },
                     ]}
                 >
                     Dashboard
@@ -133,13 +134,13 @@ export default function BottomNavigation({ state, navigation }: { state: any; na
                     <Feather
                         name="settings"
                         size={20}
-                        color={!isHome ? "#fff" : "#6B7280"}
+                        color={!isHome ? COLORS.white : COLORS.gray500}
                     />
                 </Animated.View>
                 <Text
                     style={[
                         styles.tabLabel,
-                        { color: !isHome ? "#fff" : "#6B7280" },
+                        { color: !isHome ? COLORS.white : COLORS.gray500 },
                     ]}
                 >
                     Settings
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-around",
         paddingHorizontal: 12,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.08,
         shadowRadius: 12,
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
     },
     pill: {
         position: "absolute",
-        backgroundColor: "#D97706", // Amber
+        backgroundColor: COLORS.warning, // Amber
         borderRadius: 16,
     },
     tabLabel: {

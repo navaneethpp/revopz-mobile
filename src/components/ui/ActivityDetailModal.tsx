@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React from "react";
 import {
     Modal,
@@ -26,7 +27,7 @@ export interface ActivityDetailModalProps {
  * status badge — both of which are independently reusable.
  */
 export default function ActivityDetailModal({ item, onClose }: ActivityDetailModalProps) {
-    const statusColor = item ? getStatusColor(item.status) : { bg: "#F1F5F9", text: "#64748B" };
+    const statusColor = item ? getStatusColor(item.status) : { bg: COLORS.slate100, text: "#64748B" };
 
     return (
         <Modal
@@ -149,12 +150,12 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     content: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 24,
         width: "100%",
         maxHeight: "85%",
         padding: 24,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.1,
         shadowRadius: 20,
@@ -166,13 +167,13 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "#F1F5F9",
+        borderBottomColor: COLORS.slate100,
         marginBottom: 16,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: "700",
-        color: "#1E293B",
+        color: COLORS.slate800,
     },
     closeButton: {
         padding: 4,
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     productName: {
         fontSize: 20,
         fontWeight: "800",
-        color: "#111827",
+        color: COLORS.primary,
         lineHeight: 28,
         marginBottom: 12,
     },
@@ -202,26 +203,26 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
     infoGrid: {
-        backgroundColor: "#F8FAFC",
+        backgroundColor: COLORS.background,
         borderRadius: 16,
         padding: 16,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
     },
     footer: {
         borderTopWidth: 1,
-        borderTopColor: "#F1F5F9",
+        borderTopColor: COLORS.slate100,
         paddingTop: 16,
     },
     confirmBtn: {
-        backgroundColor: "#111827",
+        backgroundColor: COLORS.primary,
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: "center",
         justifyContent: "center",
     },
     confirmText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: "700",
     },

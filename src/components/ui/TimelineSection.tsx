@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -37,7 +38,7 @@ const styles = StyleSheet.create({
     dividerLine: {
         flex: 1,
         height: 1.25,
-        backgroundColor: "#E2E8F0",
+        backgroundColor: COLORS.border,
     },
     titleText: {
         fontSize: 12,

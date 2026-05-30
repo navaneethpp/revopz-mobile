@@ -1,6 +1,8 @@
+import { COLORS } from "./colors";
+
 export const SHADOWS = {
   card: {
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 4,

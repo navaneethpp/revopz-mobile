@@ -28,9 +28,9 @@ import ScannedUnitsList from "@/components/ui/ScannedUnitsList";
 
 import { Alert } from "@/context/AlertContext";
 import { fetchProducts, type Product } from "@/services/productService";
+import { COLORS } from "@/theme/colors";
 import { registerUnitsBatch } from "@/services/unitService";
 import { db } from "@/config/firebase";
-import { COLORS } from "@/theme/colors";
 import { SPACING } from "@/theme/spacing";
 import { triggerHaptic } from "@/utils/haptics";
 
@@ -116,7 +116,7 @@ export default function BulkAddScreen() {
                         } else {
                             verifiedList.push({ serial, status: "VERIFIED SUCCESS" });
                         }
-                    } catch { 
+                    } catch {
                         failedSerials.push(serial);
                     }
                 })
@@ -184,7 +184,7 @@ export default function BulkAddScreen() {
         if (submitting || addingManualSerial) return;
         dismissKeyboard();
         const trimmedSerial = serialInput.trim();
-        
+
         if (!selectedProduct) {
             Alert.alert("Selection Required", "Please select a Product Name first.");
             return;
@@ -265,7 +265,7 @@ export default function BulkAddScreen() {
             const productNumbers = scannedList
                 .filter((item) => item && item.serial)
                 .map((item) => item.serial);
-            
+
             await registerUnitsBatch({
                 productName: selectedProduct.name,
                 productNumbers,
@@ -363,7 +363,7 @@ export default function BulkAddScreen() {
                         accessibilityLabel="Submit batch registration"
                     >
                         {submitting ? (
-                            <ActivityIndicator color="#FFFFFF" size="small" />
+                            <ActivityIndicator color={COLORS.white} size="small" />
                         ) : (
                             <Text style={styles.submitBtnText}>Submit Batch</Text>
                         )}
@@ -461,13 +461,13 @@ const styles = StyleSheet.create({
     },
     submitBtn: {
         height: SPACING.buttonHeight,
-        backgroundColor: "#0B57D0",
+        backgroundColor: COLORS.blueAccent,
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
         ...Platform.select({
             ios: {
-                shadowColor: "#0B57D0",
+                shadowColor: COLORS.blueAccent,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,
                 shadowRadius: 8,
@@ -478,26 +478,26 @@ const styles = StyleSheet.create({
         }),
     },
     submitBtnDisabled: {
-        backgroundColor: "#94A3B8",
+        backgroundColor: COLORS.slate400,
         shadowOpacity: 0,
         elevation: 0,
     },
     submitBtnText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: "700",
     },
     cancelBtn: {
         height: SPACING.buttonHeight,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         alignItems: "center",
         justifyContent: "center",
     },
     cancelBtnText: {
-        color: "#475569",
+        color: COLORS.slate600,
         fontSize: 16,
         fontWeight: "600",
     },
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         paddingTop: 12,
@@ -521,14 +521,14 @@ const styles = StyleSheet.create({
         width: 40,
         height: 4,
         borderRadius: 2,
-        backgroundColor: "#CBD5E1",
+        backgroundColor: COLORS.slate300,
         alignSelf: "center",
         marginBottom: 16,
     },
     modalTitle: {
         fontSize: 11,
         fontWeight: "700",
-        color: "#64748B",
+        color: COLORS.textMuted,
         letterSpacing: 0.8,
         textTransform: "uppercase",
         marginBottom: 16,
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         paddingVertical: 14,
         borderBottomWidth: 1,
-        borderBottomColor: "#F1F5F9",
+        borderBottomColor: COLORS.slate100,
     },
     modalOptionSelected: {},
     modalOptionText: {

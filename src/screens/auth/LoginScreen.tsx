@@ -17,6 +17,7 @@ import PrimaryButton from "@/components/ui/PrimaryInput";
 import ScreenContainer from "@/components/ui/ScreenContainer";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import { loginUser } from "@/services/authService";
+import { COLORS } from "@/theme/colors";
 
 // -----------------------------------------------------------------------
 // Validation helpers
@@ -189,7 +190,7 @@ export default function LoginScreen() {
             >
                 <Text
                     style={{
-                        color: "#0f52cc",
+                        color: COLORS.blueLink,
                         fontSize: 14,
                         fontWeight: "500",
                     }}

@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
@@ -16,7 +17,7 @@ export interface LoaderProps {
  */
 export default function Loader({
     message = "Loading…",
-    color = "#111827",
+    color = COLORS.primary,
 }: LoaderProps) {
     return (
         <View style={styles.container}>
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
     },
     text: {
         fontSize: 15,

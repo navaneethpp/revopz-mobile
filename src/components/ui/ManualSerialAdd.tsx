@@ -26,11 +26,11 @@ export default function ManualSerialAdd({
             <Text style={styles.cardLabel}>SERIAL NUMBER</Text>
             <View style={styles.manualEntryRow}>
                 <View style={[styles.manualInputWrapper, disabled && styles.manualInputWrapperDisabled]}>
-                    <Feather name="grid" size={18} color="#94A3B8" style={{ marginRight: 10 }} />
+                    <Feather name="grid" size={18} color={COLORS.slate400} style={{ marginRight: 10 }} />
                     <TextInput
                         style={[styles.manualInput, disabled && styles.manualInputDisabled]}
                         placeholder="Enter serial number"
-                        placeholderTextColor="#94A3B8"
+                        placeholderTextColor={COLORS.slate400}
                         value={value}
                         onChangeText={onChangeText}
                         autoCapitalize="characters"
@@ -49,10 +49,10 @@ export default function ManualSerialAdd({
                     accessibilityLabel="Add serial number"
                 >
                     {loading ? (
-                        <ActivityIndicator color="#FFFFFF" size="small" />
+                        <ActivityIndicator color={COLORS.white} size="small" />
                     ) : (
                         <>
-                            <Feather name="plus" size={16} color="#FFFFFF" style={{ marginRight: 4 }} />
+                            <Feather name="plus" size={16} color={COLORS.white} style={{ marginRight: 4 }} />
                             <Text style={styles.addButtonText}>Add</Text>
                         </>
                     )}
@@ -64,10 +64,10 @@ export default function ManualSerialAdd({
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         padding: 16,
     },
     cardLabel: {
@@ -86,16 +86,16 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         paddingHorizontal: 12,
         height: 48,
     },
     manualInputWrapperDisabled: {
-        backgroundColor: "#F8FAFC",
-        borderColor: "#E2E8F0",
+        backgroundColor: COLORS.background,
+        borderColor: COLORS.border,
     },
     manualInput: {
         flex: 1,
@@ -104,12 +104,12 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     manualInputDisabled: {
-        color: "#94A3B8",
+        color: COLORS.slate400,
     },
     addButton: {
         width: 92,
         height: 48,
-        backgroundColor: "#059669",
+        backgroundColor: COLORS.emerald600,
         borderRadius: 10,
         flexDirection: "row",
         alignItems: "center",
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         ...Platform.select({
             ios: {
-                shadowColor: "#059669",
+                shadowColor: COLORS.emerald600,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.15,
                 shadowRadius: 6,
@@ -128,12 +128,12 @@ const styles = StyleSheet.create({
         }),
     },
     addButtonDisabled: {
-        backgroundColor: "#94A3B8",
+        backgroundColor: COLORS.slate400,
         shadowOpacity: 0,
         elevation: 0,
     },
     addButtonText: {
-        color: "#FFFFFF",
+        color: COLORS.white,
         fontSize: 15,
         fontWeight: FONT_WEIGHT.bold as any,
     },

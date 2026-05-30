@@ -1,3 +1,4 @@
+import { COLORS } from "@/theme/colors";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
@@ -67,7 +68,7 @@ export default function PageHeader({
                         activeOpacity={0.7}
                         accessibilityLabel="Go back"
                     >
-                        <Feather name="arrow-left" size={24} color="#111827" />
+                        <Feather name="arrow-left" size={24} color={COLORS.primary} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -79,7 +80,7 @@ export default function PageHeader({
                         value={searchQuery}
                         onChangeText={onSearchQueryChange}
                         placeholder="Search product, SKU, category..."
-                        placeholderTextColor="#94A3B8"
+                        placeholderTextColor={COLORS.slate400}
                         style={styles.searchInput}
                         autoFocus={true}
                         returnKeyType="search"
@@ -112,7 +113,7 @@ export default function PageHeader({
                                 activeOpacity={0.7}
                                 accessibilityLabel="Search"
                             >
-                                <Feather name="search" size={22} color="#475569" />
+                                <Feather name="search" size={22} color={COLORS.slate600} />
                             </TouchableOpacity>
                         )}
 
@@ -151,9 +152,9 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         height: 56,
         paddingHorizontal: 16,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: "#E2E8F0",
+        borderBottomColor: COLORS.border,
     },
     leftCol: {
         width: 48,
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     titleText: {
         fontSize: 18,
         fontWeight: "700",
-        color: "#111827",
+        color: COLORS.primary,
         textAlign: "center",
     },
     rightCol: {
@@ -197,34 +198,34 @@ const styles = StyleSheet.create({
     searchInput: {
         width: "100%",
         height: 38,
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
         borderRadius: 8,
         paddingHorizontal: 12,
         fontSize: 14,
-        color: "#1E293B",
+        color: COLORS.slate800,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
     },
     avatar: {
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
     },
     avatarImage: {
         width: "100%",
         height: "100%",
     },
     avatarInitialsContainer: {
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
     },
     avatarInitialsText: {
-        color: "#1E293B",
+        color: COLORS.slate800,
         fontSize: 13,
         fontWeight: "700",
     },

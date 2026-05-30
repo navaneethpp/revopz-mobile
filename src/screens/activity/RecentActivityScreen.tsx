@@ -28,6 +28,7 @@ import {
     fetchRecentActivitiesLast7Days,
     type ActivityItemData,
 } from "@/services/activityService";
+import { COLORS } from "@/theme/colors";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -145,7 +146,7 @@ export default function RecentActivityScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
 
             {/*
              * PageHeader lives OUTSIDE KeyboardAvoidingView so it stays pinned
@@ -197,8 +198,8 @@ export default function RecentActivityScreen() {
                                         <RefreshControl
                                             refreshing={refreshing}
                                             onRefresh={onRefresh}
-                                            colors={["#111827"]}
-                                            tintColor="#111827"
+                                            colors={[COLORS.primary]}
+                                            tintColor={COLORS.primary}
                                         />
                                     }
                                 >
@@ -207,7 +208,7 @@ export default function RecentActivityScreen() {
                                             <Feather
                                                 name={searchQuery ? "search" : "activity"}
                                                 size={48}
-                                                color="#94A3B8"
+                                                color={COLORS.slate400}
                                             />
                                             <Text style={styles.emptyText}>
                                                 {searchQuery
@@ -315,7 +316,7 @@ export default function RecentActivityScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
     },
     keyboardAvoidingView: {
         flex: 1,
@@ -339,13 +340,13 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: "#64748B",
+        color: COLORS.textMuted,
         marginTop: 12,
         fontWeight: "500",
     },
     footerText: {
         textAlign: "center",
-        color: "#94A3B8",
+        color: COLORS.slate400,
         fontSize: 14,
         marginVertical: 28,
         fontWeight: "500",

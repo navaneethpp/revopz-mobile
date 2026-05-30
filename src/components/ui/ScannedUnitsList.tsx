@@ -45,7 +45,7 @@ export default function ScannedUnitsList({ items, onRemove, disabled = false }: 
                                 disabled={disabled}
                                 accessibilityLabel={`Remove serial ${item.serial}`}
                             >
-                                <Feather name="trash-2" size={18} color={disabled ? "#CBD5E1" : "#DC2626"} />
+                                <Feather name="trash-2" size={18} color={disabled ? COLORS.slate300 : COLORS.red600} />
                             </TouchableOpacity>
                         </View>
                     );
@@ -57,10 +57,10 @@ export default function ScannedUnitsList({ items, onRemove, disabled = false }: 
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: COLORS.border,
         padding: 16,
     },
     scannedHeader: {
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     progressPill: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#F1F5F9",
+        backgroundColor: COLORS.slate100,
         borderRadius: 20,
         paddingVertical: 5,
         paddingHorizontal: 12,
@@ -85,14 +85,14 @@ const styles = StyleSheet.create({
     progressPillLabel: {
         fontSize: 9,
         fontWeight: "900",
-        color: "#1D4ED8",
+        color: COLORS.blue700,
         letterSpacing: 0.6,
         marginRight: 6,
     },
     progressPillValue: {
         fontSize: 11,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#1E293B",
+        color: COLORS.slate800,
     },
     listContainer: {
         width: "100%",
@@ -103,25 +103,25 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: "#F1F5F9",
+        borderBottomColor: COLORS.slate100,
     },
     itemSerial: {
         fontSize: 14,
         fontWeight: FONT_WEIGHT.semibold as any,
-        color: "#1E293B",
+        color: COLORS.slate800,
     },
     itemSerialDisabled: {
-        color: "#94A3B8",
+        color: COLORS.slate400,
     },
     itemStatus: {
         fontSize: 10,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#059669",
+        color: COLORS.emerald600,
         marginTop: 3,
         letterSpacing: 0.4,
     },
     itemStatusDisabled: {
-        color: "#A7F3D0",
+        color: COLORS.emerald200,
     },
     deleteBtn: {
         padding: 6,

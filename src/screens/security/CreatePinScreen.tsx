@@ -100,7 +100,7 @@ export default function CreatePinScreen() {
 
     return (
         <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
 
             {/* Header info */}
             <View style={styles.header}>
@@ -182,7 +182,7 @@ export default function CreatePinScreen() {
                         activeOpacity={0.6}
                         onPress={handleDelete}
                     >
-                        <Feather name="delete" size={24} color="#1E293B" />
+                        <Feather name="delete" size={24} color={COLORS.slate800} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -193,7 +193,7 @@ export default function CreatePinScreen() {
 const styles = StyleSheet.create({
     safe: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.white,
         justifyContent: "space-between",
         paddingVertical: SPACING.xl,
     },
@@ -205,19 +205,19 @@ const styles = StyleSheet.create({
     brandTitle: {
         fontSize: 16,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#D97706", // Amber branding
+        color: COLORS.warning, // Amber branding
         letterSpacing: 1.5,
         marginBottom: SPACING.sm,
     },
     title: {
         fontSize: 22,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#1E293B",
+        color: COLORS.slate800,
         marginBottom: SPACING.xs,
     },
     subtitle: {
         fontSize: 14,
-        color: "#64748B",
+        color: COLORS.textMuted,
         textAlign: "center",
         lineHeight: 20,
     },
@@ -233,16 +233,16 @@ const styles = StyleSheet.create({
         height: 16,
         borderRadius: 8,
         borderWidth: 1.5,
-        borderColor: "#CBD5E1",
+        borderColor: COLORS.slate300,
         backgroundColor: "transparent",
     },
     dotFilled: {
-        borderColor: "#D97706",
-        backgroundColor: "#D97706",
+        borderColor: COLORS.warning,
+        backgroundColor: COLORS.warning,
     },
     dotError: {
-        borderColor: "#DC2626",
-        backgroundColor: "#DC2626",
+        borderColor: COLORS.red600,
+        backgroundColor: COLORS.red600,
     },
     errorContainer: {
         height: 24,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         fontSize: 14,
-        color: "#DC2626",
+        color: COLORS.red600,
         fontWeight: "500",
     },
     keypad: {
@@ -267,18 +267,18 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: "#F8FAFC",
+        backgroundColor: COLORS.slate50,
         alignItems: "center",
         justifyContent: "center",
     },
     keyText: {
         fontSize: 26,
         fontWeight: "600",
-        color: "#1E293B",
+        color: COLORS.slate800,
     },
     actionText: {
         fontSize: 15,
         fontWeight: "600",
-        color: "#64748B",
+        color: COLORS.textMuted,
     },
 });
