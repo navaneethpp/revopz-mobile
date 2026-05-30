@@ -250,6 +250,11 @@ export default function BulkAddScreen() {
             Alert.alert("Validation Error", "Please select a product.");
             return;
         }
+        // FV-03: category guard — check if the product category is missing
+        if (!selectedProduct.category || !selectedProduct.category.trim()) {
+            Alert.alert("Validation Error", "Selected product is missing a category. Please contact your administrator.");
+            return;
+        }
         if (scannedList.length === 0) {
             Alert.alert("Validation Error", "Please scan or add at least one serial number.");
             return;
