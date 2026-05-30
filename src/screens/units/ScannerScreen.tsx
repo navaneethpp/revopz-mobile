@@ -163,7 +163,7 @@ export default function ScannerScreen() {
     // Barcode scanned callback
     const handleBarcodeScanned = (result: BarcodeScanningResult) => {
         const barcodeData = result.data?.trim();
-        if (!barcodeData) return;
+        if (!barcodeData || barcodeData.length < 3) return;
 
         // 1. Check scan lock (synchronous)
         if (isScanningLocked.current) return;
