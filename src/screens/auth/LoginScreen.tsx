@@ -71,10 +71,14 @@ export default function LoginScreen() {
         });
     }, []);
 
-    // Clear a specific field error as the user types
+    // Clear email error only when the input becomes valid to prevent layout flashing
     const handleEmailChange = (value: string) => {
         setEmail(value);
-        if (errors.email) setErrors((e) => ({ ...e, email: "" }));
+        if (errors.email) {
+            if (value.trim() && EMAIL_REGEX.test(value.trim())) {
+                setErrors((e) => ({ ...e, email: "" }));
+            }
+        }
     };
 
     // FV-02: re-validate on blur so the user gets real-time feedback
@@ -87,9 +91,14 @@ export default function LoginScreen() {
         }
     };
 
+    // Clear password error only when it meets minimum length to prevent layout flashing
     const handlePasswordChange = (value: string) => {
         setPassword(value);
-        if (errors.password) setErrors((e) => ({ ...e, password: "" }));
+        if (errors.password) {
+            if (value && value.length >= 6) {
+                setErrors((e) => ({ ...e, password: "" }));
+            }
+        }
     };
 
     // FV-02: re-validate password on blur
