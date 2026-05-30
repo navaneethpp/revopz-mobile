@@ -4,66 +4,7 @@ import { Stack } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import * as LocalAuthentication from "expo-local-authentication";
-const mockNetInfo = {
-    fetch: async () => {
-        try {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), 3000);
-            await fetch("https://clients3.google.com/generate_204", { 
-                method: "GET", 
-                signal: controller.signal 
-            });
-            clearTimeout(id);
-            return { isConnected: true, isInternetReachable: true };
-        } catch {
-            return { isConnected: false, isInternetReachable: false };
-        }
-    },
-    addEventListener: (callback: any) => {
-        let lastStateOffline: boolean | null = null;
-        
-        const checkConnection = async () => {
-            try {
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 3000);
-                await fetch("https://clients3.google.com/generate_204", { 
-                    method: "GET", 
-                    signal: controller.signal 
-                });
-                clearTimeout(id);
-                
-                if (lastStateOffline !== false) {
-                    lastStateOffline = false;
-                    callback({ isConnected: true, isInternetReachable: true });
-                }
-            } catch {
-                if (lastStateOffline !== true) {
-                    lastStateOffline = true;
-                    callback({ isConnected: false, isInternetReachable: false });
-                }
-            }
-        };
-
-        // Run check initially
-        checkConnection();
-
-        // Poll every 5 seconds
-        const interval = setInterval(checkConnection, 5000);
-
-        return () => {
-            clearInterval(interval);
-        };
-    },
-};
-
-let NetInfo: any = mockNetInfo;
-
-try {
-    const NetInfoModule = require("@react-native-community/netinfo");
-    NetInfo = NetInfoModule.default || NetInfoModule;
-} catch (e) {
-    console.log("[RootLayout] NetInfo native module is not available, using mock:", e);
-}
+import NetInfo from "@react-native-community/netinfo";
 
 import { AuthProvider } from "@/context/AuthContext";
 import { AlertProvider, GlobalAlertSetter, Alert } from "@/context/AlertContext";
@@ -112,7 +53,6 @@ export default function RootLayout() {
                 setIsLocked(true);
             }
         } catch (e) {
-            console.error("[RootLayout] Authentication error:", e);
             setIsLocked(true);
         }
     };
@@ -149,15 +89,11 @@ export default function RootLayout() {
                                     isConnected = true;
                                     clearRetryTimers();
                                     Alert.hideLoading();
-                                    
+
                                     // Start/Resume Firestore network connection
-                                    enableNetwork(db)
-                                        .then(() => console.log("[RootLayout] Firestore network started/resumed (online)."))
-                                        .catch((err) => console.error("[RootLayout] Error starting Firestore network:", err));
+                                    enableNetwork(db).catch(() => {});
                                 }
-                            } catch (e) {
-                                console.error("[RootLayout] Error checking network status in retry:", e);
-                            }
+                            } catch { }
                         }, 2000);
 
                         // Timeout after 1 minute (60 seconds)
@@ -184,7 +120,7 @@ export default function RootLayout() {
                             } catch {
                                 try {
                                     (globalThis as any).exit?.(0);
-                                } catch {}
+                                } catch { }
                             }
                         }
                     },
@@ -197,13 +133,9 @@ export default function RootLayout() {
     useEffect(() => {
         const handleNetworkChange = (offline: boolean) => {
             if (offline) {
-                disableNetwork(db)
-                    .then(() => console.log("[RootLayout] Firestore network paused (offline)."))
-                    .catch((err) => console.error("[RootLayout] Error pausing Firestore network:", err));
+                disableNetwork(db).catch(() => {});
             } else {
-                enableNetwork(db)
-                    .then(() => console.log("[RootLayout] Firestore network started/resumed (online)."))
-                    .catch((err) => console.error("[RootLayout] Error starting Firestore network:", err));
+                enableNetwork(db).catch(() => {});
             }
         };
 

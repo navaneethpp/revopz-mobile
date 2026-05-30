@@ -126,8 +126,7 @@ export default function RecentActivityScreen() {
             });
 
             setActivities(items);
-        } catch (error: any) {
-            console.error("[RecentActivityScreen] Fetch activities error:", error);
+        } catch {
             Alert.alert("Error", "Failed to retrieve activity log history.");
         } finally {
             setLoading(false);

@@ -113,7 +113,6 @@ export function subscribeRecentUnits(
                 onUpdate(entries);
             },
             (err) => {
-                console.warn("[unitService] onSnapshot error:", err);
                 onError?.(err);
             },
         );

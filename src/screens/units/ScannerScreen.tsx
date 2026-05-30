@@ -31,9 +31,7 @@ try {
     CameraView = ExpoCamera.CameraView;
     useCameraPermissions = ExpoCamera.useCameraPermissions || mockUseCameraPermissions;
     isCameraModuleAvailable = !!CameraView;
-} catch (e) {
-    console.log("[ScannerScreen] expo-camera native module is not available:", e);
-}
+} catch { }
 import { triggerHaptic } from "@/utils/haptics";
 import { COLORS } from "@/theme/colors";
 import { FONT_WEIGHT } from "@/theme/typography";
@@ -56,9 +54,7 @@ export default function ScannerScreen() {
         if (params.initialSerials) {
             parsedInitial = JSON.parse(params.initialSerials);
         }
-    } catch (e) {
-        console.warn("[ScannerScreen] Failed to parse initialSerials:", e);
-    }
+    } catch { }
 
     const [scannedSerials, setScannedSerials] = useState<string[]>(parsedInitial);
     const [permission, requestPermission] = useCameraPermissions();

@@ -56,8 +56,7 @@ export default function SettingsScreen() {
                     setBiometricEnabled(false);
                     await SecureStore.setItemAsync("biometric_enabled", "false");
                 }
-            } catch (e) {
-                console.error("Biometric confirmation failed:", e);
+            } catch {
                 setBiometricEnabled(false);
                 await SecureStore.setItemAsync("biometric_enabled", "false");
                 Alert.alert("Error", "Authentication failed. Please try again.");
@@ -76,9 +75,7 @@ export default function SettingsScreen() {
             if (value) {
                 triggerHaptic("success");
             }
-        } catch (e) {
-            console.warn("Failed to save haptic preference:", e);
-        }
+        } catch { }
     };
 
     const handleLogout = () => {

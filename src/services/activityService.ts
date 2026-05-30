@@ -97,7 +97,6 @@ export async function fetchRecentActivity(
             } satisfies ActivityItem;
         });
     } catch (error) {
-        console.error("Recent Activity Fetch Error:", error);
         throw error;
     }
 }

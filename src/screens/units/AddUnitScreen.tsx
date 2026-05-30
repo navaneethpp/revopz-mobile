@@ -58,8 +58,7 @@ export default function AddUnitScreen() {
                     setProductsLoading(false);
                 }
             })
-            .catch((err) => {
-                console.error("[AddUnitScreen] failed to load products:", err);
+            .catch(() => {
                 if (active) {
                     setProductsLoading(false);
                 }

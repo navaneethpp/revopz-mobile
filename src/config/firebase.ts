@@ -14,18 +14,6 @@ const firebaseConfig = {
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Dump all AsyncStorage keys to see what is stored
-AsyncStorage.getAllKeys().then(async (keys) => {
-    for (const key of keys) {
-        try {
-            const val = await AsyncStorage.getItem(key);
-        } catch (e) {
-            console.error(`[FirebaseConfig] Error reading key [${key}]:`, e);
-        }
-    }
-}).catch((err) => {
-    console.error("[FirebaseConfig] Error getting AsyncStorage keys:", err);
-});
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 // Snapshot the app count BEFORE initializeApp so we can tell whether this is

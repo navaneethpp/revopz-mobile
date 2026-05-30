@@ -84,8 +84,6 @@ export const triggerHaptic = async (
                 default:
                     Vibration.vibrate(80);
             }
-        } catch (vibError) {
-            console.warn("[Haptics] Fallback vibration failed:", vibError);
-        }
+        } catch { }
     }
 };

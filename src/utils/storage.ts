@@ -56,10 +56,7 @@ export async function clearSession(): Promise<void> {
             SecureStore.deleteItemAsync(KEYS.SESSION),
             SecureStore.deleteItemAsync("biometric_enabled"),
         ]);
-    } catch (err) {
-        // Nothing the user can do; swallow silently but log for debugging.
-        console.warn("[storage] clearSession failed:", err);
-    }
+    } catch { }
 }
 
 /**

@@ -97,9 +97,7 @@ export async function checkInternetAndSyncFirestore(): Promise<void> {
         // we wait for the user to restore connectivity.
         try {
             await disableNetwork(db);
-        } catch (err) {
-            console.warn("[checkInternet] disableNetwork error:", err);
-        }
+        } catch { }
 
         // Block until the user presses Retry and is online.
         await showOfflineAlertAndWait();
@@ -108,9 +106,5 @@ export async function checkInternetAndSyncFirestore(): Promise<void> {
     // Device is confirmed online — enable Firestore network so queries work.
     try {
         await enableNetwork(db);
-        console.log("[checkInternet] Firestore network enabled.");
-    } catch (err) {
-        // Non-fatal: Firestore may already be enabled on first cold start.
-        console.warn("[checkInternet] enableNetwork error (non-fatal):", err);
-    }
+    } catch { }
 }

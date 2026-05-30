@@ -65,8 +65,7 @@ export default function BulkAddScreen() {
                     }
                 }
             })
-            .catch((err) => {
-                console.error("[BulkAddScreen] Failed to load products:", err);
+            .catch(() => {
                 if (active) setProductsLoading(false);
             });
         return () => {
@@ -109,8 +108,7 @@ export default function BulkAddScreen() {
                         } else {
                             verifiedList.push({ serial, status: "VERIFIED SUCCESS" });
                         }
-                    } catch (err) {
-                        console.error(`[BulkAddScreen] Failed to verify serial ${serial}:`, err);
+                    } catch { 
                         failedSerials.push(serial);
                     }
                 })
@@ -134,8 +132,7 @@ export default function BulkAddScreen() {
             } else if (verifiedList.length > 0) {
                 triggerHaptic("success");
             }
-        } catch (err) {
-            console.error("[BulkAddScreen] Failed to verify scanned batch:", err);
+        } catch {
             Alert.alert("Verification Error", "An error occurred while verifying the scanned serial numbers.");
         } finally {
             setAddingManualSerial(false);
@@ -205,8 +202,7 @@ export default function BulkAddScreen() {
                 { serial: trimmedSerial, status: "VERIFIED SUCCESS" },
             ]);
             setSerialInput("");
-        } catch (err: any) {
-            console.error("[BulkAddScreen] Manual verification failed:", err);
+        } catch {
             Alert.alert("Verification Failed", "Failed to verify the serial number with the database.");
         } finally {
             setAddingManualSerial(false);
@@ -251,7 +247,6 @@ export default function BulkAddScreen() {
                 { text: "OK", onPress: () => router.back() },
             ]);
         } catch (err: any) {
-            console.log("[BulkAddScreen] Batch registration failed:", err?.message || err);
             Alert.alert("Submission Failed", err?.message || "An unexpected error occurred during batch registration.");
         } finally {
             setSubmitting(false);
