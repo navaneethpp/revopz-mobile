@@ -19,7 +19,7 @@ export default function DetailRow({ label, value, icon }: DetailRowProps) {
     return (
         <View style={styles.detailRow}>
             <View style={styles.detailIconContainer}>
-                <Feather name={icon} size={16} color="#D97706" />
+                <Feather name={icon} size={16} color="#111827" />
             </View>
             <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>{label}</Text>
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 8,
-        backgroundColor: "#FFFBEB",
+        backgroundColor: "#F1F5F9",
         alignItems: "center",
         justifyContent: "center",
         marginRight: 12,

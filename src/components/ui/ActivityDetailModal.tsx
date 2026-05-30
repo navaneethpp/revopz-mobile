@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
         paddingTop: 16,
     },
     confirmBtn: {
-        backgroundColor: "#D97706",
+        backgroundColor: "#111827",
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: "center",

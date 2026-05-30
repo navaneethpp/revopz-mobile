@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: "#FEF3C7",
+        backgroundColor: "#F1F5F9",
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
@@ -85,10 +85,10 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     avatarInitialsContainer: {
-        backgroundColor: "#FEF3C7",
+        backgroundColor: "#F1F5F9",
     },
     avatarInitialsText: {
-        color: "#92400E",
+        color: "#1E293B",
         fontSize: 15,
         fontWeight: "700",
     },

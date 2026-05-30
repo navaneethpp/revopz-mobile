@@ -261,7 +261,7 @@ export default function SettingsScreen() {
                         <>
                             <View style={styles.rowDivider} />
                             <View style={styles.row}>
-                                <View style={[styles.iconBg, { backgroundColor: "#FFFBEB" }]}>
+                                <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
                                     <MaterialCommunityIcons name="fingerprint" size={22} color="#3B82F6" />
                                 </View>
                                 <View style={styles.rowText}>
@@ -271,7 +271,7 @@ export default function SettingsScreen() {
                                 <Switch
                                     value={biometricEnabled}
                                     onValueChange={toggleBiometric}
-                                    trackColor={{ false: "#E2E8F0", true: "#D97706" }}
+                                    trackColor={{ false: "#E2E8F0", true: "#111827" }}
                                     thumbColor="#FFFFFF"
                                     ios_backgroundColor="#E2E8F0"
                                 />
@@ -294,7 +294,7 @@ export default function SettingsScreen() {
                         <Switch
                             value={hapticEnabled}
                             onValueChange={toggleHaptic}
-                            trackColor={{ false: "#E2E8F0", true: "#D97706" }}
+                            trackColor={{ false: "#E2E8F0", true: "#111827" }}
                             thumbColor="#FFFFFF"
                             ios_backgroundColor="#E2E8F0"
                         />
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
         marginTop: 14,
     },
     passwordBtn: {
-        backgroundColor: "#D97706",
+        backgroundColor: "#111827",
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,

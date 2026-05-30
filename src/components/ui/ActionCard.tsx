@@ -15,7 +15,7 @@ export default function ActionCard({ icon, title, subtitle, onPress }: Props) {
             activeOpacity={0.8}
             style={styles.card}
         >
-            <Feather name={icon} size={36} color="#D97706" />
+            <Feather name={icon} size={36} color="#111827" />
 
             <Text style={styles.title}>{title}</Text>
 

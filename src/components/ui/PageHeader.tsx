@@ -67,7 +67,7 @@ export default function PageHeader({
                         activeOpacity={0.7}
                         accessibilityLabel="Go back"
                     >
-                        <Feather name="arrow-left" size={24} color="#D97706" />
+                        <Feather name="arrow-left" size={24} color="#111827" />
                     </TouchableOpacity>
                 )}
             </View>
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     titleText: {
         fontSize: 18,
         fontWeight: "700",
-        color: "#D97706",
+        color: "#111827",
         textAlign: "center",
     },
     rightCol: {
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: "#FEF3C7",
+        backgroundColor: "#F1F5F9",
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
@@ -221,10 +221,10 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     avatarInitialsContainer: {
-        backgroundColor: "#FEF3C7",
+        backgroundColor: "#F1F5F9",
     },
     avatarInitialsText: {
-        color: "#92400E",
+        color: "#1E293B",
         fontSize: 13,
         fontWeight: "700",
     },
