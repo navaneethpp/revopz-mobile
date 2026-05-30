@@ -1,13 +1,17 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
     ActivityIndicator,
+    Keyboard,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
     RefreshControl,
     ScrollView,
     StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View,
 } from "react-native";
 import { Alert } from "@/context/AlertContext";
@@ -162,6 +166,10 @@ export default function RecentActivityScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
             {/* Reusable Page Header with Search Integration */}
+            {/*
+             * PageHeader lives OUTSIDE KeyboardAvoidingView so it is always
+             * pinned at the top and never pushed up/down by the keyboard.
+             */}
             <PageHeader
                 title="Recent Activity"
                 showBackButton={true}
@@ -177,6 +185,30 @@ export default function RecentActivityScreen() {
                 }}
             />
 
+            {/*
+             * KeyboardAvoidingView fills the remaining space below the header.
+             *
+             * Android: 'height' shrinks the container to the available window
+             *   height above the software keyboard — the most reliable mode on
+             *   Android when the activity windowSoftInputMode is NOT set to
+             *   'adjustResize' (which is the Expo default).
+             *
+             * iOS: 'padding' adds bottom padding equal to the keyboard height
+             *   so SafeAreaView + ScrollView respond naturally.
+             */}
+            <KeyboardAvoidingView
+                style={styles.keyboardAvoidingView}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={0}
+            >
+                {/*
+                 * TouchableWithoutFeedback propagates taps on empty areas of
+                 * the ScrollView down to Keyboard.dismiss(), closing the
+                 * keyboard when the user taps anywhere outside the search input.
+                 */}
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                    <View style={styles.inner}>
+
             {loading ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#1565C0" />
@@ -189,6 +221,7 @@ export default function RecentActivityScreen() {
                         contentContainerStyle={styles.scrollContent}
                         bounces={false}
                         overScrollMode="never"
+                        keyboardShouldPersistTaps="handled"
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing}
@@ -289,9 +322,12 @@ export default function RecentActivityScreen() {
                             </>
                         )}
                     </ScrollView>
-
                 </View>
             )}
+
+                    </View>
+                </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
 
             {/* Details Modal Popup Overlay */}
             <Modal
@@ -395,12 +431,21 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#FFFFFF",
     },
+    keyboardAvoidingView: {
+        flex: 1,
+    },
+    // Inner wrapper required by TouchableWithoutFeedback (needs a single child
+    // View that fills all available space).
+    inner: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        position: "relative",
     },
     scrollContent: {
-        paddingBottom: 80, // buffer space for the floating action button (FAB)
+        // 120 px: enough clearance for the keyboard + bottom nav area so the
+        // last list item can always scroll fully above the keyboard.
+        paddingBottom: 120,
     },
     loadingContainer: {
         flex: 1,
