@@ -163,15 +163,20 @@ export default function LoginScreen() {
                 editable={!loading}
             />
 
-            {/* FV-01: disabled visually until a reset flow is implemented */}
             <TouchableOpacity
                 style={{
                     alignSelf: "flex-end",
                     marginTop: -6,
                     marginBottom: 12,
-                    opacity: 0.4,
                 }}
-                disabled
+                activeOpacity={0.7}
+                onPress={() => {
+                    Alert.alert(
+                        "Reset Password",
+                        "Please contact an administrator with the Manage role to reset your password.",
+                        [{ text: "OK" }]
+                    );
+                }}
             >
                 <Text
                     style={{
