@@ -243,6 +243,8 @@ export default function RecentActivityScreen() {
                     <ScrollView
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.scrollContent}
+                        bounces={false}
+                        overScrollMode="never"
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing}
@@ -373,6 +375,8 @@ export default function RecentActivityScreen() {
                             <ScrollView
                                 showsVerticalScrollIndicator={false}
                                 style={styles.modalBody}
+                                bounces={false}
+                                overScrollMode="never"
                             >
                                 {/* Product Name */}
                                 <Text style={styles.modalProductName}>{selectedItem.productName}</Text>

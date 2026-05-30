@@ -106,6 +106,8 @@ export default function SettingsScreen() {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                bounces={false}
+                overScrollMode="never"
             >
                 {/* User Profile Card */}
                 <View style={styles.profileCard}>

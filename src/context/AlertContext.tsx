@@ -93,10 +93,9 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
                 duration: 200,
                 useNativeDriver: true,
             }),
-            Animated.spring(scaleAnim, {
+            Animated.timing(scaleAnim, {
                 toValue: 1,
-                friction: 6,
-                tension: 40,
+                duration: 180,
                 useNativeDriver: true,
             }),
         ]).start();

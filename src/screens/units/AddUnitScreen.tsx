@@ -151,6 +151,8 @@ export default function AddUnitScreen() {
                     contentContainerStyle={styles.scroll}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
+                    bounces={false}
+                    overScrollMode="never"
                 >
                     {/* ── Page title & subtitle ── */}
                     <View style={styles.titleBlock}>

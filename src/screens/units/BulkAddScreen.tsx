@@ -283,6 +283,8 @@ export default function BulkAddScreen() {
                     contentContainerStyle={styles.scroll}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
+                    bounces={false}
+                    overScrollMode="never"
                 >
                     {/* 1. Reusable Product Selector */}
                     <ProductSelector
@@ -372,6 +374,8 @@ export default function BulkAddScreen() {
                     <ScrollView
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 24 }}
+                        bounces={false}
+                        overScrollMode="never"
                     >
                         {products.map((item) => (
                             <TouchableOpacity

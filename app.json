@@ -19,7 +19,11 @@
         "monochromeImage": "./assets/images/icon.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.revopzmobile"
+      "package": "com.anonymous.revopzmobile",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -53,6 +57,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a2d10f5c-9fd0-4386-86dc-757458ae1b0b"
+      }
     }
   }
 }

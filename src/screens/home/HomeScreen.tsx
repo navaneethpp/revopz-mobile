@@ -95,6 +95,8 @@ export default function HomeScreen() {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                bounces={false}
+                overScrollMode="never"
             >
                 {/* ── Welcome Heading ── */}
                 <Text style={styles.welcome}>Welcome back {name}</Text>

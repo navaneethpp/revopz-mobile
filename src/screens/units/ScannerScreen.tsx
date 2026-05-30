@@ -336,6 +336,8 @@ export default function ScannerScreen() {
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={styles.horizontalScroll}
+                                bounces={false}
+                                overScrollMode="never"
                             >
                                 {scannedSerials.map((serial, index) => (
                                     <View key={`${serial}-${index}`} style={styles.scanCard}>
