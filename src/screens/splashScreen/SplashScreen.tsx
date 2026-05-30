@@ -11,6 +11,7 @@ import { Animated, Dimensions, Image, StyleSheet, View } from "react-native";
 
 import { isLoggedIn } from "@/utils/storage";
 import { checkInternetAndSyncFirestore } from "@/utils/checkInternetAndSyncFirestore";
+import { isPinSet } from "@/utils/pinStorage";
 
 const { width } = Dimensions.get("window");
 const LOGO_SIZE = width * 0.32;
@@ -59,7 +60,12 @@ export default function SplashScreen() {
 
             // 4. Navigate — replace so the splash never appears in back-stack
             if (loggedIn) {
-                router.replace("/home");
+                const hasPin = await isPinSet();
+                if (hasPin) {
+                    router.replace("/home");
+                } else {
+                    router.replace("/security/create-pin");
+                }
             } else {
                 router.replace("/auth/login");
             }

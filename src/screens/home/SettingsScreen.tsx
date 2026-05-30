@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, StatusBar, Switch, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as LocalAuthentication from "expo-local-authentication";
 
@@ -10,6 +11,13 @@ import HeaderBar from "@/components/ui/HeaderBar";
 import { logoutUser } from "@/services/authService";
 import { getSession } from "@/utils/storage";
 import { triggerHaptic, updateHapticsCache } from "@/utils/haptics";
+import {
+    getAppLockEnabled,
+    setAppLockEnabled,
+    getResumeTimeout,
+    setResumeTimeout,
+    isPinSet,
+} from "@/utils/pinStorage";
 import type { SessionData } from "@/types/auth";
 
 export default function SettingsScreen() {
@@ -17,6 +25,11 @@ export default function SettingsScreen() {
     const [biometricEnabled, setBiometricEnabled] = useState(false);
     const [hapticEnabled, setHapticEnabled] = useState(false);
     const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+
+    // App Lock PIN security settings
+    const [appLockEnabled, setAppLockEnabledState] = useState(false);
+    const [resumeTimeout, setResumeTimeoutState] = useState(30);
+    const [hasPin, setHasPinState] = useState(false);
 
     useEffect(() => {
         // Load user session
@@ -37,6 +50,19 @@ export default function SettingsScreen() {
         ]).then(([hasHardware, isEnrolled]) => {
             setIsBiometricSupported(hasHardware && isEnrolled);
         });
+
+        // Load PIN lock configurations
+        getAppLockEnabled().then(setAppLockEnabledState);
+        getResumeTimeout().then(setResumeTimeoutState);
+        isPinSet().then(setHasPinState);
+    }, []);
+
+    // Listen to focus changes to refresh hasPin status (e.g. returning from CreatePinScreen)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            isPinSet().then(setHasPinState);
+        }, 1000);
+        return () => clearInterval(interval);
     }, []);
 
     const toggleBiometric = async (value: boolean) => {
@@ -76,6 +102,64 @@ export default function SettingsScreen() {
                 triggerHaptic("success");
             }
         } catch { }
+    };
+
+    const toggleAppLock = async (value: boolean) => {
+        try {
+            if (value) {
+                const pinExists = await isPinSet();
+                if (!pinExists) {
+                    // Navigate to set up a new PIN first
+                    triggerHaptic("warning");
+                    Alert.alert("Setup Required", "Please configure a secure App PIN first.", [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Configure PIN", onPress: () => router.push("/security/create-pin") }
+                    ]);
+                    return;
+                }
+            }
+            setAppLockEnabledState(value);
+            await setAppLockEnabled(value);
+            triggerHaptic("success");
+        } catch (err: any) {
+            Alert.alert("Error", err.message || "Failed to update App Lock settings.");
+        }
+    };
+
+    const handleChangePin = () => {
+        triggerHaptic("light");
+        router.push("/security/create-pin");
+    };
+
+    const showTimeoutPicker = () => {
+        triggerHaptic("light");
+        Alert.alert(
+            "Lock Timeout",
+            "Select when the app should lock after going to the background:",
+            [
+                { text: "Immediately", onPress: () => handleSetTimeout(0) },
+                { text: "30 Seconds", onPress: () => handleSetTimeout(30) },
+                { text: "1 Minute", onPress: () => handleSetTimeout(60) },
+                { text: "Cancel", style: "cancel" }
+            ]
+        );
+    };
+
+    const handleSetTimeout = async (seconds: number) => {
+        try {
+            await setResumeTimeout(seconds);
+            setResumeTimeoutState(seconds);
+            triggerHaptic("success");
+        } catch (err: any) {
+            Alert.alert("Error", err.message || "Failed to update timeout.");
+        }
+    };
+
+    const formatTimeoutLabel = (seconds: number) => {
+        if (seconds === 0) return "Immediately";
+        if (seconds === 30) return "30 seconds";
+        if (seconds === 60) return "1 minute";
+        return `${seconds} seconds`;
     };
 
     const handleLogout = () => {
@@ -122,18 +206,71 @@ export default function SettingsScreen() {
                 </View>
 
                 {/* Security Category */}
-                {isBiometricSupported && (
-                    <>
-                        <Text style={styles.categoryHeader}>SECURITY</Text>
-                        <TouchableOpacity style={styles.card} activeOpacity={0.8}>
-                            {/* Use Biometric Login Toggle */}
+                <Text style={styles.categoryHeader}>SECURITY</Text>
+                <View style={styles.card}>
+                    {/* Enable App Lock Toggle */}
+                    <View style={styles.row}>
+                        <View style={[styles.iconBg, { backgroundColor: "#FEF3C7" }]}>
+                            <MaterialCommunityIcons name="shield-lock" size={22} color="#D97706" />
+                        </View>
+                        <View style={styles.rowText}>
+                            <Text style={styles.rowTitle}>Enable App Lock</Text>
+                            <Text style={styles.rowSubtitle}>Secure launch & background transitions</Text>
+                        </View>
+                        <Switch
+                            value={appLockEnabled}
+                            onValueChange={toggleAppLock}
+                            trackColor={{ false: "#E2E8F0", true: "#D97706" }}
+                            thumbColor="#FFFFFF"
+                            ios_backgroundColor="#E2E8F0"
+                        />
+                    </View>
+
+                    {/* Change PIN (Only visible if PIN configured) */}
+                    {hasPin && (
+                        <>
+                            <View style={styles.rowDivider} />
+                            <TouchableOpacity style={styles.row} onPress={handleChangePin} activeOpacity={0.7}>
+                                <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
+                                    <MaterialCommunityIcons name="lock-reset" size={22} color="#475569" />
+                                </View>
+                                <View style={styles.rowText}>
+                                    <Text style={styles.rowTitle}>Change App PIN</Text>
+                                    <Text style={styles.rowSubtitle}>Update your 4-digit passcode</Text>
+                                </View>
+                                <Feather name="chevron-right" size={18} color="#94A3B8" />
+                            </TouchableOpacity>
+                        </>
+                    )}
+
+                    {/* Configurable Timeout */}
+                    {appLockEnabled && (
+                        <>
+                            <View style={styles.rowDivider} />
+                            <TouchableOpacity style={styles.row} onPress={showTimeoutPicker} activeOpacity={0.7}>
+                                <View style={[styles.iconBg, { backgroundColor: "#F1F5F9" }]}>
+                                    <MaterialCommunityIcons name="timer-outline" size={22} color="#475569" />
+                                </View>
+                                <View style={styles.rowText}>
+                                    <Text style={styles.rowTitle}>Lock Timeout</Text>
+                                    <Text style={styles.rowSubtitle}>Lock after {formatTimeoutLabel(resumeTimeout)} in background</Text>
+                                </View>
+                                <Feather name="chevron-right" size={18} color="#94A3B8" />
+                            </TouchableOpacity>
+                        </>
+                    )}
+
+                    {/* Use Biometric Unlock Toggle */}
+                    {isBiometricSupported && (
+                        <>
+                            <View style={styles.rowDivider} />
                             <View style={styles.row}>
                                 <View style={[styles.iconBg, { backgroundColor: "#EFF6FF" }]}>
                                     <MaterialCommunityIcons name="fingerprint" size={22} color="#3B82F6" />
                                 </View>
                                 <View style={styles.rowText}>
-                                    <Text style={styles.rowTitle}>Use Biometric Login</Text>
-                                    <Text style={styles.rowSubtitle}>Require authentication on launch</Text>
+                                    <Text style={styles.rowTitle}>Biometric Unlock</Text>
+                                    <Text style={styles.rowSubtitle}>Use fingerprint or face recognition</Text>
                                 </View>
                                 <Switch
                                     value={biometricEnabled}
@@ -143,9 +280,9 @@ export default function SettingsScreen() {
                                     ios_backgroundColor="#E2E8F0"
                                 />
                             </View>
-                        </TouchableOpacity>
-                    </>
-                )}
+                        </>
+                    )}
+                </View>
 
                 {/* App Preferences Category */}
                 <Text style={styles.categoryHeader}>APP PREFERENCES</Text>
