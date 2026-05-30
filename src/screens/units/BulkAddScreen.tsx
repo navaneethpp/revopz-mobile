@@ -91,12 +91,15 @@ export default function BulkAddScreen() {
         if (serials.length === 0) return;
 
         // Filter out serials already in the local scannedList to avoid local duplicates
-        const uniqueNewSerials = serials.filter(
-            (s) => s && !scannedList.some((item) => item && item.serial === s)
-        );
+        // Also enforce minimum 3 character length for scanned barcodes
+        const uniqueNewSerials = serials
+            .map(s => s.trim())
+            .filter(
+                (s) => s.length >= 3 && !scannedList.some((item) => item && item.serial === s)
+            );
 
         if (uniqueNewSerials.length === 0) {
-            Alert.alert("No New Items", "All scanned barcodes are already present in your current batch list.");
+            Alert.alert("No Valid New Items", "All scanned barcodes are either too short (under 3 characters) or already present in your current batch list.");
             return;
         }
 
