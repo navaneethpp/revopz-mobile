@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, StatusBar, Switch, ScrollView, Modal, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, StatusBar, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -9,11 +9,9 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { COLORS } from "@/theme/colors";
 import { Alert } from "@/context/AlertContext";
 import HeaderBar from "@/components/ui/HeaderBar";
-import { logoutUser, resetPassword } from "@/services/authService";
+import { logoutUser } from "@/services/authService";
 import { getSession } from "@/utils/storage";
 import { triggerHaptic, updateHapticsCache } from "@/utils/haptics";
-import CustomInput from "@/components/ui/CustomInput";
-import { checkPasswordRequirements, isPasswordValid } from "@/utils/passwordValidator";
 import {
     getAppLockEnabled,
     setAppLockEnabled,
@@ -22,6 +20,10 @@ import {
     isPinSet,
 } from "@/utils/pinStorage";
 import type { SessionData } from "@/types/auth";
+
+// Imported modular components
+import SettingRow from "./components/SettingRow";
+import ResetPasswordModal from "./components/ResetPasswordModal";
 
 export default function SettingsScreen() {
     const [session, setSession] = useState<SessionData | null>(null);
@@ -36,90 +38,6 @@ export default function SettingsScreen() {
 
     // Reset password states
     const [resetModalVisible, setResetModalVisible] = useState(false);
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [resetLoading, setResetLoading] = useState(false);
-    const [resetErrors, setResetErrors] = useState({ current: "", newPassword: "", confirm: "" });
-
-    const closeResetModal = () => {
-        setResetModalVisible(false);
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        setResetLoading(false);
-        setResetErrors({ current: "", newPassword: "", confirm: "" });
-    };
-
-    const handleResetPassword = async () => {
-        const newErrors = { current: "", newPassword: "", confirm: "" };
-        let hasError = false;
-
-        if (!currentPassword) {
-            newErrors.current = "Current password is required.";
-            hasError = true;
-        }
-
-        const reqs = checkPasswordRequirements(newPassword);
-        if (!newPassword) {
-            newErrors.newPassword = "New password is required.";
-            hasError = true;
-        } else if (!isPasswordValid(reqs)) {
-            newErrors.newPassword = "New password does not meet requirements.";
-            hasError = true;
-        }
-
-        if (!confirmPassword) {
-            newErrors.confirm = "Confirm password is required.";
-            hasError = true;
-        } else if (newPassword !== confirmPassword) {
-            newErrors.confirm = "Passwords do not match.";
-            hasError = true;
-        }
-
-        if (hasError) {
-            setResetErrors(newErrors);
-            triggerHaptic("error");
-            return;
-        }
-
-        setResetLoading(true);
-        try {
-            await resetPassword(currentPassword, newPassword);
-            closeResetModal();
-            triggerHaptic("success");
-            Alert.alert(
-                "Success",
-                "Password has been changed successfully.",
-                [{ text: "OK" }]
-            );
-        } catch (err: any) {
-            triggerHaptic("error");
-            Alert.alert(
-                "Error",
-                err.message || "Failed to update password. Please try again.",
-                [{ text: "OK" }]
-            );
-        } finally {
-            setResetLoading(false);
-        }
-    };
-
-    const reqs = checkPasswordRequirements(newPassword);
-
-    const RequirementRow = ({ label, met }: { label: string; met: boolean }) => (
-        <View style={styles.reqRow}>
-            <Feather
-                name={met ? "check-circle" : "circle"}
-                size={14}
-                color={met ? COLORS.success : COLORS.gray400}
-                style={{ marginRight: 8 }}
-            />
-            <Text style={[styles.reqText, met && styles.reqTextMet]}>
-                {label}
-            </Text>
-        </View>
-    );
 
     useEffect(() => {
         // Load user session
@@ -299,37 +217,35 @@ export default function SettingsScreen() {
                 <Text style={styles.categoryHeader}>SECURITY</Text>
                 <View style={styles.card}>
                     {/* Enable App Lock Toggle */}
-                    <View style={styles.row}>
-                        <View style={[styles.iconBg, { backgroundColor: COLORS.amber100 }]}>
-                            <MaterialCommunityIcons name="shield-lock" size={22} color={COLORS.warning} />
-                        </View>
-                        <View style={styles.rowText}>
-                            <Text style={styles.rowTitle}>Enable App Lock</Text>
-                            <Text style={styles.rowSubtitle}>Secure launch & background transitions</Text>
-                        </View>
-                        <Switch
-                            value={appLockEnabled}
-                            onValueChange={toggleAppLock}
-                            trackColor={{ false: COLORS.border, true: COLORS.warning }}
-                            thumbColor={COLORS.white}
-                            ios_backgroundColor={COLORS.border}
-                        />
-                    </View>
+                    <SettingRow
+                        type="switch"
+                        icon={
+                            <View style={[styles.iconBg, { backgroundColor: COLORS.amber100 }]}>
+                                <MaterialCommunityIcons name="shield-lock" size={22} color={COLORS.warning} />
+                            </View>
+                        }
+                        title="Enable App Lock"
+                        subtitle="Secure launch & background transitions"
+                        value={appLockEnabled}
+                        onValueChange={toggleAppLock}
+                        trackActiveColor={COLORS.warning}
+                    />
 
                     {/* Change PIN (Only visible if PIN configured) */}
                     {hasPin && (
                         <>
                             <View style={styles.rowDivider} />
-                            <TouchableOpacity style={styles.row} onPress={handleChangePin} activeOpacity={0.7}>
-                                <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
-                                    <MaterialCommunityIcons name="lock-reset" size={22} color={COLORS.slate600} />
-                                </View>
-                                <View style={styles.rowText}>
-                                    <Text style={styles.rowTitle}>Change App PIN</Text>
-                                    <Text style={styles.rowSubtitle}>Update your 4-digit passcode</Text>
-                                </View>
-                                <Feather name="chevron-right" size={18} color={COLORS.slate400} />
-                            </TouchableOpacity>
+                            <SettingRow
+                                type="nav"
+                                icon={
+                                    <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
+                                        <MaterialCommunityIcons name="lock-reset" size={22} color={COLORS.slate600} />
+                                    </View>
+                                }
+                                title="Change App PIN"
+                                subtitle="Update your 4-digit passcode"
+                                onPress={handleChangePin}
+                            />
                         </>
                     )}
 
@@ -337,16 +253,17 @@ export default function SettingsScreen() {
                     {appLockEnabled && (
                         <>
                             <View style={styles.rowDivider} />
-                            <TouchableOpacity style={styles.row} onPress={showTimeoutPicker} activeOpacity={0.7}>
-                                <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
-                                    <MaterialCommunityIcons name="timer-outline" size={22} color={COLORS.slate600} />
-                                </View>
-                                <View style={styles.rowText}>
-                                    <Text style={styles.rowTitle}>Lock Timeout</Text>
-                                    <Text style={styles.rowSubtitle}>Lock after {formatTimeoutLabel(resumeTimeout)} in background</Text>
-                                </View>
-                                <Feather name="chevron-right" size={18} color={COLORS.slate400} />
-                            </TouchableOpacity>
+                            <SettingRow
+                                type="nav"
+                                icon={
+                                    <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
+                                        <MaterialCommunityIcons name="timer-outline" size={22} color={COLORS.slate600} />
+                                    </View>
+                                }
+                                title="Lock Timeout"
+                                subtitle={`Lock after ${formatTimeoutLabel(resumeTimeout)} in background`}
+                                onPress={showTimeoutPicker}
+                            />
                         </>
                     )}
 
@@ -354,60 +271,53 @@ export default function SettingsScreen() {
                     {isBiometricSupported && (
                         <>
                             <View style={styles.rowDivider} />
-                            <View style={styles.row}>
-                                <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
-                                    <MaterialCommunityIcons name="fingerprint" size={22} color={COLORS.blueClassic} />
-                                </View>
-                                <View style={styles.rowText}>
-                                    <Text style={styles.rowTitle}>Biometric Unlock</Text>
-                                    <Text style={styles.rowSubtitle}>Use fingerprint or face recognition</Text>
-                                </View>
-                                <Switch
-                                    value={biometricEnabled}
-                                    onValueChange={toggleBiometric}
-                                    trackColor={{ false: COLORS.border, true: COLORS.primary }}
-                                    thumbColor={COLORS.white}
-                                    ios_backgroundColor={COLORS.border}
-                                />
-                            </View>
+                            <SettingRow
+                                type="switch"
+                                icon={
+                                    <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
+                                        <MaterialCommunityIcons name="fingerprint" size={22} color={COLORS.blueClassic} />
+                                    </View>
+                                }
+                                title="Biometric Unlock"
+                                subtitle="Use fingerprint or face recognition"
+                                value={biometricEnabled}
+                                onValueChange={toggleBiometric}
+                            />
                         </>
                     )}
                 </View>
 
                 {/* App Preferences Category */}
                 <Text style={styles.categoryHeader}>APP PREFERENCES</Text>
-                <TouchableOpacity activeOpacity={0.8} style={styles.card}>
-                    <View style={styles.row}>
-                        <View style={[styles.iconBg, { backgroundColor: COLORS.emerald50 }]}>
-                            <MaterialCommunityIcons name="vibrate" size={22} color={COLORS.emerald500} />
-                        </View>
-                        <View style={styles.rowText}>
-                            <Text style={styles.rowTitle}>Haptic Feedback</Text>
-                            <Text style={styles.rowSubtitle}>Vibration on scan confirmation</Text>
-                        </View>
-                        <Switch
-                            value={hapticEnabled}
-                            onValueChange={toggleHaptic}
-                            trackColor={{ false: COLORS.border, true: COLORS.primary }}
-                            thumbColor={COLORS.white}
-                            ios_backgroundColor={COLORS.border}
-                        />
-                    </View>
-                </TouchableOpacity>
+                <View style={styles.card}>
+                    <SettingRow
+                        type="switch"
+                        icon={
+                            <View style={[styles.iconBg, { backgroundColor: COLORS.emerald50 }]}>
+                                <MaterialCommunityIcons name="vibrate" size={22} color={COLORS.emerald500} />
+                            </View>
+                        }
+                        title="Haptic Feedback"
+                        subtitle="Vibration on scan confirmation"
+                        value={hapticEnabled}
+                        onValueChange={toggleHaptic}
+                    />
+                </View>
 
                 {/* System Category */}
                 <Text style={styles.categoryHeader}>SYSTEM</Text>
-                <TouchableOpacity activeOpacity={0.8} style={styles.card}>
-                    <View style={styles.row}>
-                        <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
-                            <MaterialCommunityIcons name="information-outline" size={22} color={COLORS.slate500} />
-                        </View>
-                        <View style={styles.rowText}>
-                            <Text style={styles.rowTitle}>App Version</Text>
-                        </View>
-                        <Text style={styles.versionText}>v2.4.0</Text>
-                    </View>
-                </TouchableOpacity>
+                <View style={styles.card}>
+                    <SettingRow
+                        type="info"
+                        icon={
+                            <View style={[styles.iconBg, { backgroundColor: COLORS.slate100 }]}>
+                                <MaterialCommunityIcons name="information-outline" size={22} color={COLORS.slate500} />
+                            </View>
+                        }
+                        title="App Version"
+                        rightLabel="v2.4.0"
+                    />
+                </View>
 
                 {/* Logout Button */}
                 <TouchableOpacity
@@ -423,82 +333,11 @@ export default function SettingsScreen() {
                 <Text style={styles.footerText}>© 2026 Revopz. All rights reserved.</Text>
             </ScrollView>
 
-            <Modal
+            {/* Reset Password Modal */}
+            <ResetPasswordModal
                 visible={resetModalVisible}
-                animationType="fade"
-                transparent={true}
-                onRequestClose={closeResetModal}
-            >
-                <View style={styles.modalBackdrop}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Reset Password</Text>
-                        
-                        <CustomInput
-                            label="Current Password"
-                            placeholder="Enter current password"
-                            value={currentPassword}
-                            onChangeText={setCurrentPassword}
-                            secureTextEntry
-                            editable={!resetLoading}
-                            error={resetErrors.current}
-                        />
-                        
-                        <CustomInput
-                            label="New Password"
-                            placeholder="Enter new password"
-                            value={newPassword}
-                            onChangeText={setNewPassword}
-                            secureTextEntry
-                            editable={!resetLoading}
-                            error={resetErrors.newPassword}
-                        />
-
-                        {/* Password requirements indicators */}
-                        <View style={styles.reqsContainer}>
-                            <RequirementRow label="At least 8 characters" met={reqs.hasMinLength} />
-                            <RequirementRow label="At least one uppercase letter (A-Z)" met={reqs.hasUppercase} />
-                            <RequirementRow label="At least one lowercase letter (a-z)" met={reqs.hasLowercase} />
-                            <RequirementRow label="At least one number (0-9)" met={reqs.hasNumber} />
-                            <RequirementRow label="At least one special character (!@#...)" met={reqs.hasSpecialChar} />
-                        </View>
-                        
-                        <CustomInput
-                            label="Repeat Password"
-                            placeholder="Confirm new password"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry
-                            editable={!resetLoading}
-                            error={resetErrors.confirm}
-                        />
-
-                        <View style={styles.modalActionButtons}>
-                            <TouchableOpacity
-                                style={styles.modalCancelBtn}
-                                onPress={closeResetModal}
-                                disabled={resetLoading}
-                            >
-                                <Text style={styles.modalCancelText}>Cancel</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.modalSubmitBtn,
-                                    (!isPasswordValid(reqs) || newPassword !== confirmPassword) && styles.modalSubmitBtnDisabled
-                                ]}
-                                onPress={handleResetPassword}
-                                disabled={resetLoading}
-                            >
-                                {resetLoading ? (
-                                    <ActivityIndicator size="small" color={COLORS.white} />
-                                ) : (
-                                    <Text style={styles.modalSubmitText}>Change Password</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+                onClose={() => setResetModalVisible(false)}
+            />
         </SafeAreaView>
     );
 }
@@ -570,10 +409,6 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 2,
     },
-    row: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
     rowDivider: {
         height: 1,
         backgroundColor: COLORS.slate100,
@@ -586,26 +421,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",
-        marginRight: 12,
-    },
-    rowText: {
-        flex: 1,
-    },
-    rowTitle: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: COLORS.slate800,
-    },
-    rowSubtitle: {
-        fontSize: 13,
-        color: COLORS.textMuted,
-        marginTop: 2,
-    },
-    versionText: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: COLORS.textMuted,
-        fontFamily: "System",
     },
     logoutBtn: {
         backgroundColor: COLORS.red100,
@@ -630,90 +445,5 @@ const styles = StyleSheet.create({
         color: COLORS.slate400,
         fontSize: 14,
         marginBottom: 16,
-    },
-    modalBackdrop: {
-        flex: 1,
-        backgroundColor: "rgba(15, 23, 42, 0.4)",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-    },
-    modalCard: {
-        width: "100%",
-        maxWidth: 360,
-        backgroundColor: COLORS.white,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        padding: 24,
-        shadowColor: COLORS.black,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-        elevation: 8,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: "700",
-        color: COLORS.slate800,
-        marginBottom: 20,
-        textAlign: "center",
-    },
-    reqsContainer: {
-        marginBottom: 16,
-        backgroundColor: COLORS.slate50,
-        padding: 12,
-        borderRadius: 12,
-        gap: 6,
-    },
-    reqRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    reqText: {
-        fontSize: 12,
-        color: COLORS.slate500,
-        fontWeight: "500",
-    },
-    reqTextMet: {
-        color: COLORS.success,
-        fontWeight: "600",
-    },
-    modalActionButtons: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        gap: 10,
-        marginTop: 10,
-    },
-    modalCancelBtn: {
-        flex: 1,
-        height: 48,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: COLORS.white,
-    },
-    modalCancelText: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: COLORS.slate600,
-    },
-    modalSubmitBtn: {
-        flex: 1,
-        height: 48,
-        borderRadius: 12,
-        backgroundColor: COLORS.primary,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    modalSubmitBtnDisabled: {
-        opacity: 0.5,
-    },
-    modalSubmitText: {
-        fontSize: 15,
-        fontWeight: "700",
-        color: COLORS.white,
     },
 });
