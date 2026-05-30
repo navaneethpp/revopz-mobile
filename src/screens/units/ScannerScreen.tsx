@@ -62,6 +62,7 @@ export default function ScannerScreen() {
 
     const [warningMessage, setWarningMessage] = useState<string | null>(null);
     const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const scanCooldownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Use synchronous refs to prevent React state race conditions during rapid camera scans
     const scannedRef = useRef<Set<string>>(new Set(parsedInitial));
@@ -70,9 +71,8 @@ export default function ScannerScreen() {
     // Clean up warning timeouts on unmount
     useEffect(() => {
         return () => {
-            if (warningTimeoutRef.current) {
-                clearTimeout(warningTimeoutRef.current);
-            }
+            if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+            if (scanCooldownRef.current) clearTimeout(scanCooldownRef.current);
         };
     }, []);
 
@@ -202,7 +202,8 @@ export default function ScannerScreen() {
 
             // Release the scan lock after a short delay (e.g. 1.2s)
             // to allow the user to point the camera at a different barcode
-            setTimeout(() => {
+            if (scanCooldownRef.current) clearTimeout(scanCooldownRef.current);
+            scanCooldownRef.current = setTimeout(() => {
                 isScanningLocked.current = false;
             }, 1200);
         }
