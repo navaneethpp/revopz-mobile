@@ -39,16 +39,19 @@ export default function AddUnitScreen() {
     const [products, setProducts] = useState<Product[]>([]);
     const [productOptions, setProductOptions] = useState<DropdownOption[]>([]);
     const [productsLoading, setProductsLoading] = useState(true);
+    // CR-05: track product load failure so we can show a retry button
+    const [productsError, setProductsError] = useState(false);
     const [category, setCategory] = useState("");
     const [requiresInspection, setRequiresInspection] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    // Fetch product options from Firestore on mount
-    useEffect(() => {
-        let active = true;
+    // CR-05: extracted so it can be called on initial mount and on retry
+    const loadProducts = (active: { value: boolean }) => {
+        setProductsLoading(true);
+        setProductsError(false);
         fetchProducts()
             .then((fetchedProducts) => {
-                if (active) {
+                if (active.value) {
                     setProducts(fetchedProducts);
                     const options = fetchedProducts.map((p) => ({
                         label: p.name,
@@ -59,12 +62,19 @@ export default function AddUnitScreen() {
                 }
             })
             .catch(() => {
-                if (active) {
+                if (active.value) {
+                    setProductsError(true);
                     setProductsLoading(false);
                 }
             });
+    };
+
+    // Fetch product options from Firestore on mount
+    useEffect(() => {
+        const active = { value: true };
+        loadProducts(active);
         return () => {
-            active = false;
+            active.value = false;
         };
     }, []);
 
@@ -92,12 +102,23 @@ export default function AddUnitScreen() {
     };
 
     const handleRegister = async () => {
-        if (!sku.trim()) {
+        // FV-04: SKU minimum length guard
+        const trimmedSku = sku.trim();
+        if (!trimmedSku) {
             Alert.alert("Validation Error", "Please scan or enter a Product Serial Number (SKU).");
+            return;
+        }
+        if (trimmedSku.length < 3) {
+            Alert.alert("Validation Error", "Serial number must be at least 3 characters.");
             return;
         }
         if (!productName) {
             Alert.alert("Validation Error", "Please select a Product Name.");
+            return;
+        }
+        // FV-03: category guard — auto-filled but could be blank if product data is incomplete
+        if (!category.trim()) {
+            Alert.alert("Validation Error", "Selected product is missing a category. Please contact your administrator.");
             return;
         }
 
@@ -109,7 +130,7 @@ export default function AddUnitScreen() {
 
             await registerUnit({
                 productName,
-                productNumber: sku.trim(),
+                productNumber: trimmedSku,
                 category: category,
                 requiresInspection: requiresInspection,
                 warrantyMonths: warrantyMonths,
@@ -170,13 +191,27 @@ export default function AddUnitScreen() {
                             onBarcodeScan={handleBarcodeScan}
                         />
 
-                        <LabeledDropdown
-                            label="Product Name"
-                            options={productOptions}
-                            value={productName}
-                            onChange={(opt) => handleProductChange(opt.value)}
-                            placeholder={productsLoading ? "Loading products..." : "Select Product Name"}
-                        />
+                        {/* CR-05: show retry UI if products failed to load */}
+                        {productsError ? (
+                            <View style={styles.retryRow}>
+                                <Text style={styles.retryErrorText}>Failed to load products.</Text>
+                                <TouchableOpacity
+                                    onPress={() => loadProducts({ value: true })}
+                                    style={styles.retryButton}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.retryButtonText}>Retry</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <LabeledDropdown
+                                label="Product Name"
+                                options={productOptions}
+                                value={productName}
+                                onChange={(opt) => handleProductChange(opt.value)}
+                                placeholder={productsLoading ? "Loading products..." : "Select Product Name"}
+                            />
+                        )}
 
                         <CustomInput
                             label="Category"
@@ -198,11 +233,11 @@ export default function AddUnitScreen() {
                     <TouchableOpacity
                         style={[
                             styles.registerBtn,
-                            submitting && styles.registerBtnDisabled
+                            (submitting || productsLoading) && styles.registerBtnDisabled
                         ]}
                         activeOpacity={0.85}
                         onPress={handleRegister}
-                        disabled={submitting}
+                        disabled={submitting || productsLoading /* LS-01 */}
                         accessibilityLabel="Register item"
                         accessibilityRole="button"
                     >
@@ -317,4 +352,32 @@ const styles = StyleSheet.create({
         fontWeight: FONT_WEIGHT.semibold as any,
         color: COLORS.primary,
     },
+    /* CR-05: product load failure retry row */
+    retryRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: 12,
+        paddingHorizontal: 4,
+    },
+    retryErrorText: {
+        fontSize: FONT_SIZE.sm,
+        color: "#DC2626",
+        fontWeight: "500" as any,
+        flex: 1,
+    },
+    retryButton: {
+        paddingVertical: 6,
+        paddingHorizontal: 14,
+        borderRadius: RADIUS.sm,
+        backgroundColor: "#EFF6FF",
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+    },
+    retryButtonText: {
+        fontSize: FONT_SIZE.sm,
+        fontWeight: FONT_WEIGHT.semibold as any,
+        color: COLORS.primary,
+    },
 });
+

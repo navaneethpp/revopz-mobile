@@ -61,6 +61,9 @@ export async function loginUser(
         ) {
             throw new Error("Invalid email or password.");
         }
+        if (code === "auth/invalid-email") {
+            throw new Error("Please enter a valid email address.");
+        }
         if (code === "auth/too-many-requests") {
             throw new Error(
                 "Too many failed attempts. Please try again later.",
@@ -71,7 +74,8 @@ export async function loginUser(
                 "Network error. Please check your connection.",
             );
         }
-        throw new Error(err?.message ?? "Authentication failed.");
+        // Never surface raw Firebase SDK messages to users (UX-01)
+        throw new Error("Login failed. Please try again or contact your administrator.");
     }
 
     // 2. Firestore lookup — query by email so the document structure is flexible
@@ -89,9 +93,13 @@ export async function loginUser(
             };
         }
     } catch (err: any) {
-        throw new Error(
-            "Could not verify your account. Please try again.",
-        );
+        // Always sign out if Firestore lookup fails — leaves no half-authed session (FB-01)
+        await signOut(auth).catch(() => null);
+        const code: string = err?.code ?? "";
+        if (code === "permission-denied") {
+            throw new Error("Account verification failed. Please contact your administrator.");
+        }
+        throw new Error("Could not verify your account. Please try again.");
     }
 
     if (!adminData) {

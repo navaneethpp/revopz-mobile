@@ -96,12 +96,37 @@ export default function RootLayout() {
                             } catch { }
                         }, 2000);
 
-                        // Timeout after 1 minute (60 seconds)
+                        // Timeout after 1 minute (60 seconds) — NET-02: re-show alert
+                        // with an explanatory message so user knows why retry expired.
                         retryTimeoutRef.current = setTimeout(() => {
                             clearRetryTimers();
                             Alert.hideLoading();
                             if (!isConnected) {
-                                showOfflineAlert();
+                                isOfflineAlertShowing.current = false;
+                                Alert.alert(
+                                    "Connection Timed Out",
+                                    "Could not verify your connection within 60 seconds. Please check your network settings and try again.",
+                                    [
+                                        {
+                                            text: "Retry",
+                                            onPress: () => {
+                                                isOfflineAlertShowing.current = false;
+                                                showOfflineAlert();
+                                            },
+                                        },
+                                        {
+                                            text: "Exit",
+                                            style: "destructive",
+                                            onPress: () => {
+                                                isOfflineAlertShowing.current = false;
+                                                if (Platform.OS === "android") {
+                                                    BackHandler.exitApp();
+                                                }
+                                            },
+                                        },
+                                    ],
+                                    { cancelable: false }
+                                );
                             }
                         }, 60000);
                     },
@@ -131,6 +156,7 @@ export default function RootLayout() {
     };
 
     useEffect(() => {
+        // NET-03: strict isInternetReachable check — null (captive portal) treated as offline
         const handleNetworkChange = (offline: boolean) => {
             if (offline) {
                 disableNetwork(db).catch(() => {});
@@ -139,21 +165,12 @@ export default function RootLayout() {
             }
         };
 
-        // 1. One-time check on open (launch)
-        NetInfo.fetch().then((state: any) => {
-            const offline = state.isConnected === false || state.isInternetReachable === false;
-            handleNetworkChange(offline);
-            if (offline) {
-                // Tiny timeout to let the GlobalAlertSetter register the context ref
-                setTimeout(() => {
-                    showOfflineAlert();
-                }, 500);
-            }
-        });
-
-        // 2. Continuous network monitoring in the middle of app usage
+        // NET-01: The splash screen already handles startup connectivity, so we
+        // only need addEventListener here for mid-session drops. Removing the
+        // one-time NetInfo.fetch() startup check prevents duplicate offline alerts.
         const unsubscribe = NetInfo.addEventListener((state: any) => {
-            const offline = state.isConnected === false || state.isInternetReachable === false;
+            // Treat isInternetReachable===null (captive portal) as offline (NET-03)
+            const offline = state.isConnected !== true || state.isInternetReachable !== true;
             handleNetworkChange(offline);
             if (offline) {
                 showOfflineAlert();
@@ -206,6 +223,15 @@ export default function RootLayout() {
             subscription.remove();
         };
     }, []);
+
+    // NAV-03: Consume Android hardware back press while the biometric lock
+    // overlay is active. Without this, back press can pop navigation screens
+    // behind the overlay without unlocking the app.
+    useEffect(() => {
+        if (!isLocked) return;
+        const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
+        return () => sub.remove();
+    }, [isLocked]);
 
     return (
         <AuthProvider>

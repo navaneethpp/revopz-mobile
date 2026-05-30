@@ -65,7 +65,12 @@ export default function SplashScreen() {
             }
         };
 
-        run();
+        // NAV-02: catch any unexpected error (e.g. SecureStore unavailable on
+        // encrypted/locked device) and default to the login screen so the user
+        // is never stranded on a blank splash.
+        run().catch(() => {
+            if (!cancelled) router.replace("/auth/login");
+        });
 
         return () => {
             cancelled = true;

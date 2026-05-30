@@ -55,6 +55,9 @@ export async function clearSession(): Promise<void> {
         await Promise.all([
             SecureStore.deleteItemAsync(KEYS.SESSION),
             SecureStore.deleteItemAsync("biometric_enabled"),
+            // SS-02: clear haptic preference so a new user on a shared device
+            // doesn't inherit the previous user's setting.
+            SecureStore.deleteItemAsync("haptic_enabled"),
         ]);
     } catch { }
 }

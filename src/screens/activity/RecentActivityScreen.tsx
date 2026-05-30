@@ -90,13 +90,17 @@ export default function RecentActivityScreen() {
     const [isSearching, setIsSearching] = useState(false);
     const [selectedItem, setSelectedItem] = useState<ActivityItemData | null>(null);
 
-    const fetchActivities = async () => {
+    // CR-03: accept a cancelled ref so pull-to-refresh + immediate back-press
+    // doesn't trigger state updates on an unmounted component.
+    const fetchActivities = async (cancelled: { value: boolean } = { value: false }) => {
         try {
             const q = query(
                 collection(db, "manufactured_units"),
                 orderBy("createdAt", "desc")
             );
             const snapshot = await getDocs(q);
+
+            if (cancelled.value) return;
 
             if (snapshot.empty) {
                 setActivities([]);
@@ -125,32 +129,42 @@ export default function RecentActivityScreen() {
                 };
             });
 
-            setActivities(items);
+            if (!cancelled.value) setActivities(items);
         } catch {
-            Alert.alert("Error", "Failed to retrieve activity log history.");
+            if (!cancelled.value) Alert.alert("Error", "Failed to retrieve activity log history.");
         } finally {
-            setLoading(false);
-            setRefreshing(false);
+            if (!cancelled.value) {
+                setLoading(false);
+                setRefreshing(false);
+            }
         }
     };
 
     useEffect(() => {
         let unsubscribeAuth: (() => void) | null = null;
-        let cancelled = false;
+        let cancelled = { value: false };
+
+        // ES-02: 10-second auth timeout — if auth never resolves (e.g. corrupted
+        // AsyncStorage token), stop loading rather than showing an infinite spinner.
+        const authTimeout = setTimeout(() => {
+            if (!cancelled.value) setLoading(false);
+        }, 10_000);
 
         const checkAuthAndFetch = () => {
             if (auth.currentUser) {
-                fetchActivities();
+                clearTimeout(authTimeout);
+                fetchActivities(cancelled);
             } else {
                 unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-                    if (cancelled) return;
+                    if (cancelled.value) return;
+                    clearTimeout(authTimeout);
                     if (user) {
                         // Unsubscribe so it doesn't trigger multiple times
                         if (unsubscribeAuth) {
                             unsubscribeAuth();
                             unsubscribeAuth = null;
                         }
-                        fetchActivities();
+                        fetchActivities(cancelled);
                     } else {
                         setLoading(false);
                     }
@@ -161,7 +175,8 @@ export default function RecentActivityScreen() {
         checkAuthAndFetch();
 
         return () => {
-            cancelled = true;
+            cancelled.value = true;
+            clearTimeout(authTimeout);
             if (unsubscribeAuth) {
                 unsubscribeAuth();
             }
@@ -169,8 +184,9 @@ export default function RecentActivityScreen() {
     }, []);
 
     const onRefresh = () => {
+        // CR-03: create a fresh cancelled ref for each pull-to-refresh
         setRefreshing(true);
-        fetchActivities();
+        fetchActivities({ value: false });
     };
 
     // Filter and group activities based on search text input

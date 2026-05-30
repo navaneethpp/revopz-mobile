@@ -6,9 +6,13 @@ import type { ActivityItem as ActivityItemData } from "@/services/activityServic
 type Props = {
     entries?: ActivityItemData[];
     loading?: boolean;
+    /** True when the fetch failed — shows an error message instead of empty state */
+    error?: boolean;
+    /** Called when the user taps "Tap to retry" in the error state */
+    onRetry?: () => void;
 };
 
-export default function RecentActivityCard({ entries = [], loading = false }: Props) {
+export default function RecentActivityCard({ entries = [], loading = false, error = false, onRetry }: Props) {
 
     return (
         <View style={styles.card}>
@@ -32,15 +36,27 @@ export default function RecentActivityCard({ entries = [], loading = false }: Pr
                 </View>
             )}
 
+            {/* Error state — distinct from empty state (ES-01 / FB-04) */}
+            {!loading && error && (
+                <View style={styles.centerBox}>
+                    <Text style={styles.errorText}>Failed to load activity.</Text>
+                    {onRetry && (
+                        <TouchableOpacity onPress={onRetry} activeOpacity={0.7} style={styles.retryBtn}>
+                            <Text style={styles.retryText}>Tap to retry</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
+
             {/* Empty state */}
-            {!loading && entries.length === 0 && (
+            {!loading && !error && entries.length === 0 && (
                 <View style={styles.centerBox}>
                     <Text style={styles.emptyText}>No recent activity yet.</Text>
                 </View>
             )}
 
             {/* Live entries */}
-            {!loading &&
+            {!loading && !error &&
                 entries.map((entry, index) => (
                     <ActivityItem
                         key={entry.id}
@@ -52,6 +68,7 @@ export default function RecentActivityCard({ entries = [], loading = false }: Pr
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     card: {
@@ -89,5 +106,22 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 14,
         color: "#9CA3AF",
+    },
+    errorText: {
+        fontSize: 14,
+        color: "#DC2626",
+        fontWeight: "500",
+    },
+    retryBtn: {
+        marginTop: 8,
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        backgroundColor: "#EFF6FF",
+    },
+    retryText: {
+        fontSize: 13,
+        color: "#1565C0",
+        fontWeight: "600",
     },
 });

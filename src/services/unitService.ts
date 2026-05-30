@@ -102,7 +102,10 @@ export function subscribeRecentUnits(
                         productName: data.productName ?? "",
                         productNumber: data.productNumber ?? "",
                         category: data.category ?? "",
-                        createdAt: data.createdAt as Timestamp,
+                        // CR-01: guard against missing createdAt field (e.g. manually-inserted docs)
+                        createdAt: data.createdAt instanceof Timestamp
+                            ? data.createdAt
+                            : Timestamp.now(),
                         createdByName: data.createdByName ?? "",
                         status: data.status ?? "",
                         warrantyMonths: data.warrantyMonths ?? 0,
@@ -177,7 +180,19 @@ export async function registerUnit(data: RegisterUnitData): Promise<void> {
         warrantyStatus: "not_registered",
     };
 
-    await setDoc(docRef, unitDoc);
+    try {
+        await setDoc(docRef, unitDoc);
+    } catch (err: any) {
+        // FB-03: Map Firestore error codes to friendly user messages
+        const code: string = err?.code ?? "";
+        if (code === "permission-denied") {
+            throw new Error("You do not have permission to register units.");
+        }
+        if (code === "unavailable") {
+            throw new Error("Network unavailable. Please check your connection and try again.");
+        }
+        throw new Error("Failed to register unit. Please try again.");
+    }
 }
 
 export interface RegisterUnitBatchData {
@@ -252,7 +267,19 @@ export async function registerUnitsBatch(data: RegisterUnitBatchData): Promise<v
         batch.set(docRef, unitDoc);
     }
 
-    await batch.commit();
+    try {
+        await batch.commit();
+    } catch (err: any) {
+        // FB-03: Map Firestore error codes to friendly user messages
+        const code: string = err?.code ?? "";
+        if (code === "permission-denied") {
+            throw new Error("You do not have permission to register units.");
+        }
+        if (code === "unavailable") {
+            throw new Error("Network unavailable. Please check your connection and try again.");
+        }
+        throw new Error("Failed to register batch. Please try again.");
+    }
 }
 
 

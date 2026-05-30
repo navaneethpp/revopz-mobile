@@ -27,10 +27,15 @@ import { db } from "@/config/firebase";
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Returns true when the device has a working internet connection. */
+/** Returns true when the device has a confirmed working internet connection.
+ *
+ * NOTE: `isInternetReachable` can be `null` (unknown) on captive-portal
+ * Wi-Fi networks. We treat null as offline to avoid proceeding without real
+ * internet (NET-03).
+ */
 async function isConnected(): Promise<boolean> {
     const state = await NetInfo.fetch();
-    return state.isConnected === true && state.isInternetReachable !== false;
+    return state.isConnected === true && state.isInternetReachable === true;
 }
 
 /**

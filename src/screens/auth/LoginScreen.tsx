@@ -77,9 +77,28 @@ export default function LoginScreen() {
         if (errors.email) setErrors((e) => ({ ...e, email: "" }));
     };
 
+    // FV-02: re-validate on blur so the user gets real-time feedback
+    // when they leave a field rather than only on submit.
+    const handleEmailBlur = () => {
+        if (!email.trim()) {
+            setErrors((e) => ({ ...e, email: "Email is required." }));
+        } else if (!EMAIL_REGEX.test(email.trim())) {
+            setErrors((e) => ({ ...e, email: "Please enter a valid email address." }));
+        }
+    };
+
     const handlePasswordChange = (value: string) => {
         setPassword(value);
         if (errors.password) setErrors((e) => ({ ...e, password: "" }));
+    };
+
+    // FV-02: re-validate password on blur
+    const handlePasswordBlur = () => {
+        if (!password) {
+            setErrors((e) => ({ ...e, password: "Password is required." }));
+        } else if (password.length < 6) {
+            setErrors((e) => ({ ...e, password: "Password must be at least 6 characters." }));
+        }
     };
 
     const handleLogin = async () => {
@@ -95,10 +114,12 @@ export default function LoginScreen() {
         // 2. Attempt login
         setLoading(true);
         try {
-            // Save biometric access preference before navigating/completing login
-            await SecureStore.setItemAsync("biometric_enabled", biometricEnabled ? "true" : "false");
             // loginUser handles navigation internally on success
             await loginUser(email, password);
+            // SS-01: write biometric preference ONLY after login succeeds,
+            // so a failed login attempt on a shared device doesn't persist
+            // the wrong user's biometric preference.
+            await SecureStore.setItemAsync("biometric_enabled", biometricEnabled ? "true" : "false");
         } catch (err: any) {
             // Show error as an Alert (keeps the screen clean for retry)
             Alert.alert(
@@ -120,6 +141,7 @@ export default function LoginScreen() {
                 placeholder="Enter your email"
                 value={email}
                 onChangeText={handleEmailChange}
+                onBlur={handleEmailBlur}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -133,6 +155,7 @@ export default function LoginScreen() {
                 placeholder="Enter your password"
                 value={password}
                 onChangeText={handlePasswordChange}
+                onBlur={handlePasswordBlur}
                 secureTextEntry
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
@@ -140,13 +163,15 @@ export default function LoginScreen() {
                 editable={!loading}
             />
 
+            {/* FV-01: disabled visually until a reset flow is implemented */}
             <TouchableOpacity
                 style={{
                     alignSelf: "flex-end",
                     marginTop: -6,
                     marginBottom: 12,
+                    opacity: 0.4,
                 }}
-                disabled={loading}
+                disabled
             >
                 <Text
                     style={{

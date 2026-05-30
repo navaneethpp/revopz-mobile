@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     ScrollView,
     StatusBar,
@@ -26,6 +26,8 @@ export default function HomeScreen() {
     // Stay in loading state until auth is resolved AND the Firestore fetch finishes.
     // Initialise to true so we never flash "No recent activity yet" during startup.
     const [activityLoading, setActivityLoading] = useState(true);
+    // FB-04 / ES-01: distinguish "fetch failed" from "genuinely empty"
+    const [activityError, setActivityError] = useState(false);
 
     // Load the logged-in user's display name from SecureStore
     useEffect(() => {
@@ -33,6 +35,17 @@ export default function HomeScreen() {
             if (session?.name) setName(session.name);
         });
     }, []);
+
+    // LS-02: Safety timeout — if authReady never resolves (e.g. corrupted
+    // AsyncStorage token), force a clean logout after 10 seconds rather than
+    // showing an infinite spinner.
+    useEffect(() => {
+        if (authReady) return;
+        const timeout = setTimeout(() => {
+            logoutUser();
+        }, 10_000);
+        return () => clearTimeout(timeout);
+    }, [authReady]);
 
     // ─────────────────────────────────────────────────────────────────────────
     // Fetch recent activity — only after Firebase Auth has finished restoring
@@ -57,17 +70,23 @@ export default function HomeScreen() {
 
         if (!user) {
             // Force a clean logout to clear out of sync SecureStore state and
-            // redirect to the login screen.
-            logoutUser();
+            // redirect to the login screen. NAV-01: must be awaited so SecureStore
+            // is cleared before navigation fires.
+            (async () => {
+                await logoutUser();
+            })();
             return;
         }
 
 
         const fetchActivity = async () => {
+            setActivityError(false);
             try {
                 const items = await fetchRecentActivity(5);
                 if (!cancelled) setActivityEntries(items);
             } catch {
+                // FB-04: mark error so UI can show a retry instead of the empty-state text
+                if (!cancelled) setActivityError(true);
             } finally {
                 if (!cancelled) setActivityLoading(false);
             }
@@ -100,6 +119,15 @@ export default function HomeScreen() {
                 <RecentActivityCard
                     entries={activityEntries}
                     loading={activityLoading}
+                    error={activityError}
+                    onRetry={() => {
+                        setActivityLoading(true);
+                        setActivityError(false);
+                        fetchRecentActivity(5)
+                            .then(setActivityEntries)
+                            .catch(() => setActivityError(true))
+                            .finally(() => setActivityLoading(false));
+                    }}
                 />
 
                 {/* ── Action Cards (dashed container) ── */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Keyboard,
@@ -49,6 +49,14 @@ export default function BulkAddScreen() {
     const [scannedList, setScannedList] = useState<ScannedUnit[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [addingManualSerial, setAddingManualSerial] = useState(false);
+
+    // CR-02: mounted ref — prevents state updates on unmounted component
+    // when async verification resolves after the user has already navigated away.
+    const mountedRef = useRef(true);
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => { mountedRef.current = false; };
+    }, []);
 
     const totalQty = scannedList.length;
 
@@ -114,28 +122,39 @@ export default function BulkAddScreen() {
                 })
             );
 
+            // CR-02: guard against unmounted state updates
+            if (!mountedRef.current) return;
+
             // Add the verified ones to scannedList
             if (verifiedList.length > 0) {
                 setScannedList((prev) => [...prev, ...verifiedList]);
             }
 
+            // UX-02: truncate long serial lists to avoid unscrollable alerts
+            const formatList = (list: string[]) => {
+                const shown = list.slice(0, 5).join("\n");
+                return list.length > 5 ? `${shown}\n… and ${list.length - 5} more` : shown;
+            };
+
             // Report results
             if (duplicatesInDb.length > 0 || failedSerials.length > 0) {
                 let message = "";
                 if (duplicatesInDb.length > 0) {
-                    message += `The following serial numbers already exist in the database and were excluded:\n${duplicatesInDb.join("\n")}\n\n`;
+                    message += `The following serial numbers already exist in the database and were excluded:\n${formatList(duplicatesInDb)}\n\n`;
                 }
                 if (failedSerials.length > 0) {
-                    message += `Failed to verify the following serial numbers due to connection issues:\n${failedSerials.join("\n")}`;
+                    message += `Failed to verify the following serial numbers due to connection issues:\n${formatList(failedSerials)}`;
                 }
                 Alert.alert("Verification Results", message.trim());
             } else if (verifiedList.length > 0) {
                 triggerHaptic("success");
             }
         } catch {
+            // CR-02: guard
+            if (!mountedRef.current) return;
             Alert.alert("Verification Error", "An error occurred while verifying the scanned serial numbers.");
         } finally {
-            setAddingManualSerial(false);
+            if (mountedRef.current) setAddingManualSerial(false);
         }
     };
 
@@ -174,6 +193,11 @@ export default function BulkAddScreen() {
             Alert.alert("Validation Error", "Please enter a valid serial number.");
             return;
         }
+        // FV-05: minimum serial length guard
+        if (trimmedSerial.length < 3) {
+            Alert.alert("Validation Error", "Serial number must be at least 3 characters.");
+            return;
+        }
 
         // Check if already in local scanned list
         if (scannedList.some((item) => item && item.serial === trimmedSerial)) {
@@ -197,6 +221,8 @@ export default function BulkAddScreen() {
 
             // Success adding
             triggerHaptic("success");
+            // CR-02: guard
+            if (!mountedRef.current) return;
             setScannedList((prev) => [
                 ...prev,
                 { serial: trimmedSerial, status: "VERIFIED SUCCESS" },
@@ -205,7 +231,7 @@ export default function BulkAddScreen() {
         } catch {
             Alert.alert("Verification Failed", "Failed to verify the serial number with the database.");
         } finally {
-            setAddingManualSerial(false);
+            if (mountedRef.current) setAddingManualSerial(false);
         }
     };
 
