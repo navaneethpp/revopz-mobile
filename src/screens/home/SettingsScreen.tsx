@@ -195,10 +195,6 @@ export default function SettingsScreen() {
                     <Text style={styles.profileName}>{session?.name ?? "User"}</Text>
 
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={styles.editProfileBtn} activeOpacity={0.85}>
-                            <Text style={styles.editProfileText}>EDIT PROFILE</Text>
-                        </TouchableOpacity>
-
                         <TouchableOpacity style={styles.passwordBtn} activeOpacity={0.85}>
                             <Text style={styles.passwordText}>PASSWORD</Text>
                         </TouchableOpacity>
@@ -265,7 +261,7 @@ export default function SettingsScreen() {
                         <>
                             <View style={styles.rowDivider} />
                             <View style={styles.row}>
-                                <View style={[styles.iconBg, { backgroundColor: "#EFF6FF" }]}>
+                                <View style={[styles.iconBg, { backgroundColor: "#FFFBEB" }]}>
                                     <MaterialCommunityIcons name="fingerprint" size={22} color="#3B82F6" />
                                 </View>
                                 <View style={styles.rowText}>
@@ -275,7 +271,7 @@ export default function SettingsScreen() {
                                 <Switch
                                     value={biometricEnabled}
                                     onValueChange={toggleBiometric}
-                                    trackColor={{ false: "#E2E8F0", true: "#3B82F6" }}
+                                    trackColor={{ false: "#E2E8F0", true: "#D97706" }}
                                     thumbColor="#FFFFFF"
                                     ios_backgroundColor="#E2E8F0"
                                 />
@@ -298,7 +294,7 @@ export default function SettingsScreen() {
                         <Switch
                             value={hapticEnabled}
                             onValueChange={toggleHaptic}
-                            trackColor={{ false: "#E2E8F0", true: "#3B82F6" }}
+                            trackColor={{ false: "#E2E8F0", true: "#D97706" }}
                             thumbColor="#FFFFFF"
                             ios_backgroundColor="#E2E8F0"
                         />
@@ -368,29 +364,14 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         marginTop: 14,
     },
-    editProfileBtn: {
-        backgroundColor: "#0052CC",
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        marginRight: 10,
-    },
-    editProfileText: {
-        color: "#FFFFFF",
-        fontSize: 13,
-        fontWeight: "700",
-        letterSpacing: 0.5,
-    },
     passwordBtn: {
-        backgroundColor: "transparent",
-        borderWidth: 1,
-        borderColor: "#475569",
+        backgroundColor: "#D97706",
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
     },
     passwordText: {
-        color: "#1E293B",
+        color: "#FFFFFF",
         fontSize: 13,
         fontWeight: "700",
         letterSpacing: 0.5,

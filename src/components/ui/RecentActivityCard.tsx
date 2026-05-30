@@ -31,7 +31,7 @@ export default function RecentActivityCard({ entries = [], loading = false, erro
             {/* Loading state */}
             {loading && (
                 <View style={styles.centerBox}>
-                    <ActivityIndicator size="small" color="#1565C0" />
+                    <ActivityIndicator size="small" color="#D97706" />
                     <Text style={styles.loadingText}>Loading activity…</Text>
                 </View>
             )}
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     viewAll: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#1565C0",
+        color: "#D97706",
     },
     centerBox: {
         alignItems: "center",
@@ -117,11 +117,11 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 16,
         borderRadius: 8,
-        backgroundColor: "#EFF6FF",
+        backgroundColor: "#FFFBEB",
     },
     retryText: {
         fontSize: 13,
-        color: "#1565C0",
+        color: "#D97706",
         fontWeight: "600",
     },
 });

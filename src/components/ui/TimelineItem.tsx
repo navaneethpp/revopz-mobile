@@ -144,7 +144,7 @@ export default function TimelineItem({
             label: "WAREHOUSE TRANSFER",
             icon: "trending-up",
             iconColor: "#2563EB",
-            circleBg: "#EFF6FF",
+            circleBg: "#FFFBEB",
             badgeColor: "#2563EB",
             metaLeftText: "",
             metaLeftIsLink: false,
@@ -153,7 +153,7 @@ export default function TimelineItem({
             highlightLeft: "",
             highlightLeftColor: "#2563EB",
             highlightRight: `Logistics Sync • Mfg: ${manufacturedDate || "N/A"}`,
-            highlightBg: "#EFF6FF",
+            highlightBg: "#FFFBEB",
             highlightBorderColor: "#BFDBFE",
             isTransfer: true,
             transferFrom: "Production Floor",
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
         fontWeight: "500",
     },
     metaLinkText: {
-        color: "#1565C0",
+        color: "#D97706",
         fontWeight: "600",
     },
     transferFlow: {

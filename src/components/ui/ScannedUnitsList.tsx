@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     progressPill: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#EFF6FF",
+        backgroundColor: "#FFFBEB",
         borderRadius: 20,
         paddingVertical: 5,
         paddingHorizontal: 12,
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     progressPillValue: {
         fontSize: 11,
         fontWeight: FONT_WEIGHT.bold as any,
-        color: "#1D4ED8",
+        color: "#92400E",
     },
     listContainer: {
         width: "100%",

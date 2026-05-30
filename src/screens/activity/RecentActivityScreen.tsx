@@ -197,8 +197,8 @@ export default function RecentActivityScreen() {
                                         <RefreshControl
                                             refreshing={refreshing}
                                             onRefresh={onRefresh}
-                                            colors={["#1565C0"]}
-                                            tintColor="#1565C0"
+                                            colors={["#D97706"]}
+                                            tintColor="#D97706"
                                         />
                                     }
                                 >

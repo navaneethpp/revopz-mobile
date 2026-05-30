@@ -16,7 +16,7 @@ export interface LoaderProps {
  */
 export default function Loader({
     message = "Loading…",
-    color = "#1565C0",
+    color = "#D97706",
 }: LoaderProps) {
     return (
         <View style={styles.container}>
