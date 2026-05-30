@@ -293,7 +293,7 @@ export default function BulkAddScreen() {
 
             {/* Header */}
             <PageHeader
-                title="Bulk Add"
+                title="Register Unit"
                 showBackButton={!submitting && !addingManualSerial}
                 showSearch={false}
                 showAvatar={!submitting && !addingManualSerial}
