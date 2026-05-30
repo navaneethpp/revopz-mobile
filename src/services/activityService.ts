@@ -15,6 +15,7 @@ import {
     limit,
     getDocs,
     Timestamp,
+    where,
 } from "firebase/firestore";
 import { auth, db } from "@/config/firebase";
 
@@ -95,6 +96,71 @@ export async function fetchRecentActivity(
                 title: `Units Added: ${productName}`,
                 subtitle: `${productNumber} • ${category} • ${when}`,
             } satisfies ActivityItem;
+        });
+    } catch (error) {
+        throw error;
+    }
+}
+
+export interface ActivityItemData {
+    id: string;
+    productName: string;
+    productNumber: string;
+    category: string;
+    status: string;
+    createdAt: Date;
+    createdByName: string;
+    createdByRole?: string;
+    manufacturedDate?: string;
+    warrantyMonths?: number;
+    warrantyStatus?: string;
+}
+
+export async function fetchRecentActivitiesLast7Days(): Promise<ActivityItemData[]> {
+    try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const q = query(
+            collection(db, "manufactured_units"),
+            where("createdAt", ">=", Timestamp.fromDate(sevenDaysAgo)),
+            orderBy("createdAt", "desc")
+        );
+
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+            return [];
+        }
+
+        return snapshot.docs.map((doc) => {
+            const data = doc.data();
+
+            let createdAt: Date;
+            if (data.createdAt && typeof data.createdAt.toDate === "function") {
+                createdAt = data.createdAt.toDate();
+            } else if (data.createdAt instanceof Timestamp) {
+                createdAt = data.createdAt.toDate();
+            } else if (data.createdAt && typeof data.createdAt.toMillis === "function") {
+                createdAt = new Date(data.createdAt.toMillis());
+            } else if (data.createdAt && data.createdAt.seconds) {
+                createdAt = new Date(data.createdAt.seconds * 1000);
+            } else {
+                createdAt = new Date();
+            }
+
+            return {
+                id: doc.id,
+                productName: data.productName ?? "Unknown Product",
+                productNumber: data.productNumber ?? "",
+                category: data.category ?? "",
+                status: data.status ?? "",
+                createdAt,
+                createdByName: data.createdByName ?? "",
+                createdByRole: data.createdByRole ?? "",
+                manufacturedDate: data.manufacturedDate ?? "",
+                warrantyMonths: data.warrantyMonths ?? 0,
+                warrantyStatus: data.warrantyStatus ?? "",
+            };
         });
     } catch (error) {
         throw error;

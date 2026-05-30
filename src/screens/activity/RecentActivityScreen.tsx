@@ -13,26 +13,11 @@ import {
 import { Alert } from "@/context/AlertContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "@/config/firebase";
 import PageHeader from "@/components/ui/PageHeader";
 import TimelineSection from "@/components/ui/TimelineSection";
 import TimelineItem from "@/components/ui/TimelineItem";
-
-interface ActivityItemData {
-    id: string;
-    productName: string;
-    productNumber: string;
-    category: string;
-    status: string;
-    createdAt: Date;
-    createdByName: string;
-    createdByRole?: string;
-    manufacturedDate?: string;
-    warrantyMonths?: number;
-    warrantyStatus?: string;
-}
+import { useAuth } from "@/context/AuthContext";
+import { fetchRecentActivitiesLast7Days, type ActivityItemData } from "@/services/activityService";
 
 const getDayLabel = (date: Date): "TODAY" | "YESTERDAY" | "OLDER" => {
     const today = new Date();
@@ -83,6 +68,7 @@ const getStatusColor = (status: string) => {
 };
 
 export default function RecentActivityScreen() {
+    const { user, authReady } = useAuth();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [activities, setActivities] = useState<ActivityItemData[]>([]);
@@ -95,44 +81,14 @@ export default function RecentActivityScreen() {
     // CR-03: use a stable component-level ref to prevent memory leaks/state updates on unmount
     const fetchActivities = async () => {
         try {
-            const q = query(
-                collection(db, "manufactured_units"),
-                orderBy("createdAt", "desc")
-            );
-            const snapshot = await getDocs(q);
-
-            if (cancelledRef.current) return;
-
-            if (snapshot.empty) {
-                setActivities([]);
-                return;
+            const items = await fetchRecentActivitiesLast7Days();
+            if (!cancelledRef.current) {
+                setActivities(items);
             }
-
-            const items: ActivityItemData[] = snapshot.docs.map((doc) => {
-                const data = doc.data();
-                const createdAt: Date =
-                    data.createdAt instanceof Timestamp
-                        ? data.createdAt.toDate()
-                        : new Date();
-
-                return {
-                    id: doc.id,
-                    productName: data.productName ?? "Unknown Product",
-                    productNumber: data.productNumber ?? "",
-                    category: data.category ?? "",
-                    status: data.status ?? "",
-                    createdAt,
-                    createdByName: data.createdByName ?? "",
-                    createdByRole: data.createdByRole ?? "",
-                    manufacturedDate: data.manufacturedDate ?? "",
-                    warrantyMonths: data.warrantyMonths ?? 0,
-                    warrantyStatus: data.warrantyStatus ?? "",
-                };
-            });
-
-            if (!cancelledRef.current) setActivities(items);
         } catch {
-            if (!cancelledRef.current) Alert.alert("Error", "Failed to retrieve activity log history.");
+            if (!cancelledRef.current) {
+                Alert.alert("Error", "Failed to retrieve activity log history.");
+            }
         } finally {
             if (!cancelledRef.current) {
                 setLoading(false);
@@ -142,47 +98,20 @@ export default function RecentActivityScreen() {
     };
 
     useEffect(() => {
-        let unsubscribeAuth: (() => void) | null = null;
         cancelledRef.current = false;
 
-        // ES-02: 10-second auth timeout — if auth never resolves (e.g. corrupted
-        // AsyncStorage token), stop loading rather than showing an infinite spinner.
-        const authTimeout = setTimeout(() => {
-            if (!cancelledRef.current) setLoading(false);
-        }, 10_000);
-
-        const checkAuthAndFetch = () => {
-            if (auth.currentUser) {
-                clearTimeout(authTimeout);
+        if (authReady) {
+            if (user) {
                 fetchActivities();
             } else {
-                unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-                    if (cancelledRef.current) return;
-                    clearTimeout(authTimeout);
-                    if (user) {
-                        // Unsubscribe so it doesn't trigger multiple times
-                        if (unsubscribeAuth) {
-                            unsubscribeAuth();
-                            unsubscribeAuth = null;
-                        }
-                        fetchActivities();
-                    } else {
-                        setLoading(false);
-                    }
-                });
+                setLoading(false);
             }
-        };
-
-        checkAuthAndFetch();
+        }
 
         return () => {
             cancelledRef.current = true;
-            clearTimeout(authTimeout);
-            if (unsubscribeAuth) {
-                unsubscribeAuth();
-            }
         };
-    }, []);
+    }, [authReady, user]);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -275,7 +204,7 @@ export default function RecentActivityScreen() {
                                 <Text style={styles.emptyText}>
                                     {searchQuery
                                         ? `No results found for "${searchQuery}"`
-                                        : "No recent activity yet."}
+                                        : "No recent activity found for the past 7 days."}
                                 </Text>
                             </View>
                         ) : (
@@ -356,7 +285,7 @@ export default function RecentActivityScreen() {
                                 )}
 
                                 {/* End of Activity Footer */}
-                                <Text style={styles.footerText}>End of recent activity</Text>
+                                <Text style={styles.footerText}>Older activity is not accessible through this app.</Text>
                             </>
                         )}
                     </ScrollView>
