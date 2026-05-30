@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
     ActivityIndicator,
     Modal,
@@ -90,9 +90,10 @@ export default function RecentActivityScreen() {
     const [isSearching, setIsSearching] = useState(false);
     const [selectedItem, setSelectedItem] = useState<ActivityItemData | null>(null);
 
-    // CR-03: accept a cancelled ref so pull-to-refresh + immediate back-press
-    // doesn't trigger state updates on an unmounted component.
-    const fetchActivities = async (cancelled: { value: boolean } = { value: false }) => {
+    const cancelledRef = useRef(false);
+
+    // CR-03: use a stable component-level ref to prevent memory leaks/state updates on unmount
+    const fetchActivities = async () => {
         try {
             const q = query(
                 collection(db, "manufactured_units"),
@@ -100,7 +101,7 @@ export default function RecentActivityScreen() {
             );
             const snapshot = await getDocs(q);
 
-            if (cancelled.value) return;
+            if (cancelledRef.current) return;
 
             if (snapshot.empty) {
                 setActivities([]);
@@ -129,11 +130,11 @@ export default function RecentActivityScreen() {
                 };
             });
 
-            if (!cancelled.value) setActivities(items);
+            if (!cancelledRef.current) setActivities(items);
         } catch {
-            if (!cancelled.value) Alert.alert("Error", "Failed to retrieve activity log history.");
+            if (!cancelledRef.current) Alert.alert("Error", "Failed to retrieve activity log history.");
         } finally {
-            if (!cancelled.value) {
+            if (!cancelledRef.current) {
                 setLoading(false);
                 setRefreshing(false);
             }
@@ -142,21 +143,21 @@ export default function RecentActivityScreen() {
 
     useEffect(() => {
         let unsubscribeAuth: (() => void) | null = null;
-        let cancelled = { value: false };
+        cancelledRef.current = false;
 
         // ES-02: 10-second auth timeout — if auth never resolves (e.g. corrupted
         // AsyncStorage token), stop loading rather than showing an infinite spinner.
         const authTimeout = setTimeout(() => {
-            if (!cancelled.value) setLoading(false);
+            if (!cancelledRef.current) setLoading(false);
         }, 10_000);
 
         const checkAuthAndFetch = () => {
             if (auth.currentUser) {
                 clearTimeout(authTimeout);
-                fetchActivities(cancelled);
+                fetchActivities();
             } else {
                 unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-                    if (cancelled.value) return;
+                    if (cancelledRef.current) return;
                     clearTimeout(authTimeout);
                     if (user) {
                         // Unsubscribe so it doesn't trigger multiple times
@@ -164,7 +165,7 @@ export default function RecentActivityScreen() {
                             unsubscribeAuth();
                             unsubscribeAuth = null;
                         }
-                        fetchActivities(cancelled);
+                        fetchActivities();
                     } else {
                         setLoading(false);
                     }
@@ -175,7 +176,7 @@ export default function RecentActivityScreen() {
         checkAuthAndFetch();
 
         return () => {
-            cancelled.value = true;
+            cancelledRef.current = true;
             clearTimeout(authTimeout);
             if (unsubscribeAuth) {
                 unsubscribeAuth();
@@ -184,9 +185,8 @@ export default function RecentActivityScreen() {
     }, []);
 
     const onRefresh = () => {
-        // CR-03: create a fresh cancelled ref for each pull-to-refresh
         setRefreshing(true);
-        fetchActivities({ value: false });
+        fetchActivities();
     };
 
     // Filter and group activities based on search text input
