@@ -84,7 +84,7 @@ export default function RootLayout() {
                         retryIntervalRef.current = setInterval(async () => {
                             try {
                                 const state = await NetInfo.fetch();
-                                const online = state.isConnected !== false && state.isInternetReachable !== false;
+                                const online = state.isConnected === true && state.isInternetReachable === true;
                                 if (online) {
                                     isConnected = true;
                                     clearRetryTimers();
