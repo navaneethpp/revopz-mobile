@@ -65,7 +65,7 @@ export default function HomeScreen() {
 
         const fetchActivity = async () => {
             try {
-                const items = await fetchRecentActivity(3);
+                const items = await fetchRecentActivity(5);
                 if (!cancelled) setActivityEntries(items);
             } catch (err: any) {
                 console.error(

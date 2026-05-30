@@ -10,6 +10,7 @@ import { useEffect, useRef } from "react";
 import { Animated, Dimensions, Image, StyleSheet, View } from "react-native";
 
 import { isLoggedIn } from "@/utils/storage";
+import { checkInternetAndSyncFirestore } from "@/utils/checkInternetAndSyncFirestore";
 
 const { width } = Dimensions.get("window");
 const LOGO_SIZE = width * 0.32;
@@ -48,7 +49,15 @@ export default function SplashScreen() {
 
             if (cancelled) return;
 
-            // 3. Navigate — replace so the splash never appears in back-stack
+            // 3. Verify internet connectivity and enable Firestore network.
+            //    This blocks until the device is online (showing a Retry/Exit
+            //    alert when offline), so navigation only happens when Firestore
+            //    is ready to serve live queries.
+            await checkInternetAndSyncFirestore();
+
+            if (cancelled) return;
+
+            // 4. Navigate — replace so the splash never appears in back-stack
             if (loggedIn) {
                 router.replace("/home");
             } else {

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, disableNetwork } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 // @ts-ignore — getReactNativePersistence is resolved from the RN bundle at runtime by Metro,
 // but type definitions default to web. We import it from firebase/auth with @ts-ignore.
 import { initializeAuth, getAuth, getReactNativePersistence } from "firebase/auth";
@@ -57,10 +57,5 @@ export const auth = alreadyInitialized
     });
 
 export const db = getFirestore(app);
-
-// Disable network initially to prevent connection errors before internet connectivity is verified.
-disableNetwork(db).catch((err) => {
-    console.error("[FirebaseConfig] Error disabling network initially:", err);
-});
 
 export default app;
