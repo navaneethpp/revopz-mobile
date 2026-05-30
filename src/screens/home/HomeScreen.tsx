@@ -134,15 +134,8 @@ export default function HomeScreen() {
                 <View style={styles.dashedContainer}>
                     <ActionCard
                         icon="plus-square"
-                        title="Add Single Unit"
-                        subtitle="Log a single item with full metadata."
-                        onPress={() => router.push("/units/add")}
-                    />
-                    <View style={{ height: 12 }} />
-                    <ActionCard
-                        icon="copy"
-                        title="Bulk Add Units"
-                        subtitle="Rapidly ingest multiple items of the same type."
+                        title="Register Units"
+                        subtitle="Scan and register manufactured units to the database."
                         onPress={() => router.push("/units/bulk")}
                     />
                 </View>
