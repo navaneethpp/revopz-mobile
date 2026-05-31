@@ -51,9 +51,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "prebuild": "ANDROID_HOME=$HOME/Android/Sdk npx expo prebuild",
-    "build:android-debug": "ANDROID_HOME=$HOME/Android/Sdk cd android && ./gradlew assembleDebug",
-    "build:android-release": "ANDROID_HOME=$HOME/Android/Sdk cd android && ./gradlew assembleRelease"
+    "prebuild": "export ANDROID_HOME=$HOME/Android/Sdk && npx expo prebuild",
+    "build:android-debug": "cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew assembleDebug",
+    "build:android-release": "cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew assembleRelease"
   },
   "private": true
 }
