@@ -1,6 +1,6 @@
 import * as Haptics from "expo-haptics";
 import * as SecureStore from "expo-secure-store";
-import { Vibration } from "react-native";
+import { Vibration, Platform } from "react-native";
 
 let isHapticEnabledCache: boolean | null = null;
 
@@ -33,30 +33,59 @@ export const triggerHaptic = async (
 
     try {
         // Attempt expo-haptics first
-        switch (type) {
-            case "light":
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                break;
-            case "medium":
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                break;
-            case "heavy":
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                break;
-            case "success":
-                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                break;
-            case "warning":
-                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                break;
-            case "error":
-                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                break;
-            case "selection":
-                await Haptics.selectionAsync();
-                break;
-            default:
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        if (Platform.OS === "android") {
+            // Android often filters out notificationAsync.
+            // Map success/warning/error to direct impactAsync or Vibration API.
+            switch (type) {
+                case "success":
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    break;
+                case "warning":
+                    Vibration.vibrate([0, 100, 80, 100]);
+                    break;
+                case "error":
+                    Vibration.vibrate([0, 80, 40, 80, 40, 150]);
+                    break;
+                case "light":
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    break;
+                case "medium":
+                case "selection":
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    break;
+                case "heavy":
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                    break;
+                default:
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+        } else {
+            // iOS precise haptics
+            switch (type) {
+                case "light":
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    break;
+                case "medium":
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    break;
+                case "heavy":
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                    break;
+                case "success":
+                    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    break;
+                case "warning":
+                    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                    break;
+                case "error":
+                    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                    break;
+                case "selection":
+                    await Haptics.selectionAsync();
+                    break;
+                default:
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
         }
     } catch (e) {
         // Fallback to React Native Vibration API if expo-haptics native module is not ready/loaded
