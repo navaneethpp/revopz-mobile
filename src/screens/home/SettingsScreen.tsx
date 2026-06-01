@@ -28,7 +28,7 @@ import ResetPasswordModal from "./components/ResetPasswordModal";
 export default function SettingsScreen() {
     const [session, setSession] = useState<SessionData | null>(null);
     const [biometricEnabled, setBiometricEnabled] = useState(false);
-    const [hapticEnabled, setHapticEnabled] = useState(false);
+    const [hapticEnabled, setHapticEnabled] = useState(true);
     const [isBiometricSupported, setIsBiometricSupported] = useState(false);
 
     // App Lock PIN security settings
@@ -48,7 +48,11 @@ export default function SettingsScreen() {
             if (val !== null) setBiometricEnabled(val === "true");
         });
         SecureStore.getItemAsync("haptic_enabled").then((val) => {
-            if (val !== null) setHapticEnabled(val === "true");
+            if (val !== null) {
+                setHapticEnabled(val === "true");
+            } else {
+                setHapticEnabled(true);
+            }
         });
 
         // Check if biometric authentication is supported and enrolled
@@ -106,9 +110,6 @@ export default function SettingsScreen() {
         try {
             await SecureStore.setItemAsync("haptic_enabled", value ? "true" : "false");
             updateHapticsCache(value);
-            if (value) {
-                triggerHaptic("success");
-            }
         } catch { }
     };
 

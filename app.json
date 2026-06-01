@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "revopz-mobile",
+    "name": "REVOPZ Production",
     "slug": "revopz-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -22,7 +22,8 @@
       "package": "com.anonymous.revopzmobile",
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.VIBRATE"
       ]
     },
     "web": {

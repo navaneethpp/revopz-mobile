@@ -270,29 +270,30 @@ export default function ScannerScreen() {
                             "upc_e",
                         ],
                     }}
-                >
-                    {/* Centered Align Text Overlay */}
-                    <View style={styles.cameraOverlay}>
-                        <Text style={styles.overlayText}>Align barcode within the frame</Text>
+                />
+                {/* Centered Align Text Overlay */}
+                <View style={[StyleSheet.absoluteFill, styles.cameraOverlay]}>
+                    <Text style={styles.overlayText}>Align barcode within the frame</Text>
 
-                        {warningMessage && (
-                            <View style={styles.warningOverlay}>
-                                <Feather name="alert-triangle" size={16} color={COLORS.white} />
-                                <Text style={styles.warningText} numberOfLines={2}>
-                                    {warningMessage}
-                                </Text>
-                            </View>
-                        )}
 
-                        {/* Scanner Framing Overlay */}
-                        <View style={styles.scannerFrame}>
-                            <View style={[styles.corner, styles.topLeft]} />
-                            <View style={[styles.corner, styles.topRight]} />
-                            <View style={[styles.corner, styles.bottomLeft]} />
-                            <View style={[styles.corner, styles.bottomRight]} />
+
+                    {warningMessage && (
+                        <View style={[styles.warningOverlay, { top: 150 }]}>
+                            <Feather name="alert-triangle" size={16} color={COLORS.white} />
+                            <Text style={styles.warningText} numberOfLines={2}>
+                                {warningMessage}
+                            </Text>
                         </View>
+                    )}
+
+                    {/* Scanner Framing Overlay */}
+                    <View style={styles.scannerFrame}>
+                        <View style={[styles.corner, styles.topLeft]} />
+                        <View style={[styles.corner, styles.topRight]} />
+                        <View style={[styles.corner, styles.bottomLeft]} />
+                        <View style={[styles.corner, styles.bottomRight]} />
                     </View>
-                </CameraView>
+                </View>
             </View>
 
             {/* Bottom panel / sheet (only displayed in bulk mode) */}

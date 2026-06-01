@@ -81,10 +81,14 @@ export async function fetchRecentActivity(
             const data = doc.data();
 
             // Convert Firestore Timestamp → JS Date for reliable time calculation
-            const createdAt: Date =
-                data.createdAt instanceof Timestamp
-                    ? data.createdAt.toDate()
-                    : new Date();
+            let createdAt: Date;
+            if (data.createdAt && typeof data.createdAt.toDate === "function") {
+                createdAt = data.createdAt.toDate();
+            } else if (data.createdAt instanceof Timestamp) {
+                createdAt = data.createdAt.toDate();
+            } else {
+                createdAt = new Date();
+            }
 
             const productName: string = data.productName ?? "Unknown Product";
             const productNumber: string = data.productNumber ?? "";
