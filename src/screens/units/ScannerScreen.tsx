@@ -275,8 +275,10 @@ export default function ScannerScreen() {
                 <View style={[StyleSheet.absoluteFill, styles.cameraOverlay]}>
                     <Text style={styles.overlayText}>Align barcode within the frame</Text>
 
+
+
                     {warningMessage && (
-                        <View style={styles.warningOverlay}>
+                        <View style={[styles.warningOverlay, { top: 150 }]}>
                             <Feather name="alert-triangle" size={16} color={COLORS.white} />
                             <Text style={styles.warningText} numberOfLines={2}>
                                 {warningMessage}
