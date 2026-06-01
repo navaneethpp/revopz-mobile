@@ -5,6 +5,7 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as LocalAuthentication from "expo-local-authentication";
+import Constants from "expo-constants";
 
 import { COLORS } from "@/theme/colors";
 import { Alert } from "@/context/AlertContext";
@@ -316,7 +317,7 @@ export default function SettingsScreen() {
                             </View>
                         }
                         title="App Version"
-                        rightLabel="v2.4.0"
+                        rightLabel={`v${Constants.expoConfig?.version ?? "1.0.0"}`}
                     />
                 </View>
 

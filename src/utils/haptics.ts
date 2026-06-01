@@ -28,8 +28,6 @@ export const triggerHaptic = async (
         await initHaptics();
     }
 
-    console.log(`[Haptics] triggerHaptic called with type: "${type}", enabled: ${isHapticEnabledCache}`);
-
     if (!isHapticEnabledCache) return;
 
     try {
