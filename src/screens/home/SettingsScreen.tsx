@@ -110,9 +110,6 @@ export default function SettingsScreen() {
         try {
             await SecureStore.setItemAsync("haptic_enabled", value ? "true" : "false");
             updateHapticsCache(value);
-            if (value) {
-                triggerHaptic("success");
-            }
         } catch { }
     };
 
